@@ -62,7 +62,7 @@ java -cp out main.java.com.larpers.Main
 
 ## 👥 Team LARPERS
 Creators of **Hero Craft**  
-*(Insert member names here)*  
+*Barcastigue, John Vincent (Lead dev)*  
 
 ----- CHOOSE YOUR FACTION. WRITE YOUR LEGEND. -----
 
