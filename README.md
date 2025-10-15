@@ -1,11 +1,28 @@
-# 🛡️ HERO CRAFT  
-Welcome to the world of **Hero Craft**, a battleground where strategy meets imagination.  
-In this realm, three mighty factions — **Humans**, **Demi-Humans**, and **Mystics** — wage endless wars for honor and supremacy.  
-No grinding. No luck. Only **tactics, timing, and pure skill** determine victory.  
+## HERO CRAFT  
+Welcome to **Hero Craft**, where legends are not born — they are chosen.  
+In a realm torn by rivalry and magic, three ancient factions rise: **Humans**, **Demi-Humans**, and **Mystics**.  
+Each stands proud under their own banner, their heroes bound by destiny and skill.  
+
+There are no second chances here — no grinding, no luck.  
+Only **strategy, courage, and pure logic** decide who walks away victorious.  
+
+The battlefield awaits. Choose your hero. Forge your fate.  
+
+----- ALL HAIL HERO CRAFT -----
 
 ---
 
-## ⚔️ Factions
+## Gameplay Overview
+Step into fast-paced, **turn-based duels** where every move matters.  
+
+Players can choose between:
+- **Player vs Player (PvP)** – Outsmart real opponents in tactical combat.  
+- **Player vs AI (PvE)** – Challenge the system in a fight of logic and code.  
+
+Every match is **fixed** — no progression, no stat farming, only your wits and timing.  
+---
+
+## Factions
 **Humans** — Swordsman | Assassin | Priest | Monk  
 **Demi-Humans** — Archer | Gunner | Minotaur | Werewolf  
 **Mystics** — Summoner | Elementalist | Druid | Kitsune  
@@ -14,10 +31,12 @@ Each faction stands unique — steel, fang, or spell. Choose wisely.
 
 ---
 
-## 🎮 Gameplay
-* **Player vs Player (PvP)** — Outsmart a rival hero in a duel of strategy.  
-* **Player vs AI (PvE)** — Test your might against coded intelligence.  
-Every battle is **fixed** — no progression, no levels, just your mind and your hero.  
+## Core Features
+- 3 Factions with **12 unique heroes**  
+- **Turn-based combat** with tactical skill selection  
+- **PvP and PvE modes** for versatile gameplay  
+- **Fixed matches** — no leveling, no randomness, just pure strategy  
+- **Console-based UI** with clean, responsive design  
 
 ---
 
@@ -26,7 +45,25 @@ Every battle is **fixed** — no progression, no levels, just your mind and your
 **Compile:**  
 ```bash
 javac -d out $(find src/main/java -name "*.java")
-
-***Run:
-
+````
+***Run:**
+```
 java -cp out main.java.com.larpers.Main
+````
+---
+
+## Future Plans
+- Hero skill trees and ultimate abilities  
+- Ranked multiplayer with leaderboards  
+- Lore-driven story campaign  
+- Visual and sound upgrades for immersive battles  
+
+---
+
+## 👥 Team LARPERS
+Creators of **Hero Craft**  
+*(Insert member names here)*  
+
+----- CHOOSE YOUR FACTION. WRITE YOUR LEGEND. -----
+
+
