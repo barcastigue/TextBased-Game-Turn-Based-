@@ -1,48 +1,28 @@
--------------------------------------------------
-# ⚔️ Hero Craft: A Faction-Based Battle RPG  
-**Hero Craft** is a text-based, turn-based battle simulator built in **Java**, created by **Team LARPERS**.  
-Players choose from three unique factions—**Humans**, **Demi-Humans**, and **Mystics**—each commanding four heroes with distinct playstyles and powers.  
-
--------------------------------------------------
-
-## 🎮 Gameplay Overview  
-
-Choose your mode of battle:  
-* **Player vs Player (PvP)** – Face off against another hero in tactical combat.  
-* **Player vs AI (PvE)** – Test your might against computer-controlled foes.  
-
-Every match is **fixed and skill-based** — no progression, no upgrades, just pure **strategy and timing**.  
+# 🛡️ HERO CRAFT  
+Welcome to the world of **Hero Craft**, a battleground where strategy meets imagination.  
+In this realm, three mighty factions — **Humans**, **Demi-Humans**, and **Mystics** — wage endless wars for honor and supremacy.  
+No grinding. No luck. Only **tactics, timing, and pure skill** determine victory.  
 
 ---
 
-## 🧭 Factions and Heroes  
+## ⚔️ Factions
+**Humans** — Swordsman | Assassin | Priest | Monk  
+**Demi-Humans** — Archer | Gunner | Minotaur | Werewolf  
+**Mystics** — Summoner | Elementalist | Druid | Kitsune  
 
-| **Faction**      |                **Heroes**                  |
-| ---------------- | ------------------------------------------ |
-| **Humans**       | Swordsman • Assassin • Priest • Monk       |
-| **Demi-Humans**  | Archer • Gunner • Minotaur • Werewolf      |
-| **Mystics**      | Summoner • Elementalist • Druid • Kitsune  |
-
-Each faction brings its own flavor of combat — from brute strength to divine sorcery.  
+Each faction stands unique — steel, fang, or spell. Choose wisely.  
 
 ---
 
-⚙️ **Technical Details**  
-- Language: **Java**  
-- Type: **Text-based, turn-driven battle game**  
-- Modes: **PvP / PvE**  
-- Interface: **Console-based menus**  
+## 🎮 Gameplay
+* **Player vs Player (PvP)** — Outsmart a rival hero in a duel of strategy.  
+* **Player vs AI (PvE)** — Test your might against coded intelligence.  
+Every battle is **fixed** — no progression, no levels, just your mind and your hero.  
 
 ---
 
-💡 **Future Plans**  
-- Add hero leveling and skill trees  
-- Introduce ranked multiplayer  
-- Expand lore and storylines  
-- Add visuals and sound effects  
-
----
-
-👥 **Contributors**  
-**Team LARPERS**  
-- Barcastigue, John Vincent G. (Lead Dev)
+## ⚙️ How to Run
+**Requirements:** Java 17+  
+**Compile:**  
+```bash
+javac -d out $(find src/main/java -name "*.java")
