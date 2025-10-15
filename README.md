@@ -26,3 +26,7 @@ Every battle is **fixed** — no progression, no levels, just your mind and your
 **Compile:**  
 ```bash
 javac -d out $(find src/main/java -name "*.java")
+
+***Run:
+
+java -cp out main.java.com.larpers.Main
