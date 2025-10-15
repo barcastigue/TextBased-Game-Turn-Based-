@@ -1,4 +1,4 @@
-## HERO CRAFT  
+### HERO CRAFT  
 Welcome to **Hero Craft**, where legends are not born — they are chosen.  
 In a realm torn by rivalry and magic, three ancient factions rise: **Humans**, **Demi-Humans**, and **Mystics**.  
 Each stands proud under their own banner, their heroes bound by destiny and skill.  
