@@ -1,4 +1,4 @@
---
+--------------------------------------------------------
 ⚔️ Hero Craft: A Faction-Based Battle RPG
 
 Hero Craft is a text-based, turn-based battle simulator built in Java, created by Team LARPERS.
