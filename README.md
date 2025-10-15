@@ -64,6 +64,6 @@ java -cp out main.java.com.larpers.Main
 Creators of **Hero Craft**  
 *Barcastigue, John Vincent (Lead dev)*  
 
------ CHOOSE YOUR FACTION. WRITE YOUR LEGEND. -----
+----- All Hail Maroon and Gold -----
 
 
