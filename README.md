@@ -44,4 +44,4 @@ Each faction brings its own flavor of combat — from brute strength to divine s
 
 👥 **Contributors**  
 **Team LARPERS**  
-- (Insert names here)
+- Barcastigue, John Vincent G. (Lead Dev)
