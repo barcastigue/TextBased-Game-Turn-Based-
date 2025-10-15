@@ -27,7 +27,7 @@ Every match is **fixed** — no progression, no stat farming, only your wits and
 **Demi-Humans** — Archer | Gunner | Minotaur | Werewolf  
 **Mystics** — Summoner | Elementalist | Druid | Kitsune  
 
-Each faction stands unique — steel, fang, or spell. Choose wisely.  
+Each faction stands unique —  Choose wisely.  
 
 ---
 
