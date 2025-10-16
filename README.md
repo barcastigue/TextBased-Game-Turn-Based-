@@ -46,7 +46,7 @@ Each faction stands unique —  Choose wisely.
 ```bash
 javac -d out $(find src/main/java -name "*.java")
 ````
-***Run:**
+**Run:**
 ```
 java -cp out main.java.com.Hero-Craft.Main
 ````
