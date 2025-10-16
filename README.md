@@ -48,7 +48,7 @@ javac -d out $(find src/main/java -name "*.java")
 ````
 ***Run:**
 ```
-java -cp out main.java.com.larpers.Main
+java -cp out main.java.com.Hero-Craft.Main
 ````
 ---
 
