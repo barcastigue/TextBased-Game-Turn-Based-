@@ -17,8 +17,8 @@ public class MainMenu {
     private Description description = new Description();
 
     public void display() {
-        boolean running = true;
-        while (running) {
+        boolean isRunning = true;
+        while (isRunning) {
             try {
                 Utility.clearScreen();
                 System.out.println("====================================");
@@ -33,7 +33,7 @@ public class MainMenu {
                 switch (choice) {
                     case "1" -> gameManager.startGame();
                     case "2" -> description.show();
-                    case "3" -> running = confirmQuit();
+                    case "3" -> isRunning = confirmQuit();
                     default -> {
                         System.out.println("Invalid choice! Please enter 1, 2, or 3.");
                         Utility.pause();
@@ -41,7 +41,7 @@ public class MainMenu {
                 }
             } catch (InputMismatchException e) {
                 System.out.println("Invalid input type! Please enter a number.");
-                sc.nextLine(); // clear buffer
+                sc.nextLine();
                 Utility.pause();
             } catch (Exception e) {
                 System.out.println("Unexpected error: " + e.getMessage());
@@ -53,20 +53,19 @@ public class MainMenu {
     }
 
     private boolean confirmQuit() {
-        try {
+        while (true) {
             System.out.print("Are you sure you want to quit? (Y/N): ");
             String input = sc.nextLine().trim().toLowerCase();
             if (input.equals("y")) {
                 System.out.println("Goodbye, hero!");
-                return false;
-            } else {
+                return true;
+            } else if (input.equals("n")) {
                 System.out.println("Returning to main menu...");
                 Utility.pause();
-                return true;
+                return false;
+            } else {
+                System.out.println("Invalid input. Please enter Y or N.");
             }
-        } catch (Exception e) {
-            System.out.println("Error while confirming quit: " + e.getMessage());
-            return true;
         }
     }
 }
