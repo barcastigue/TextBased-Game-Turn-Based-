@@ -9,7 +9,6 @@ package HeroCraft.Core;
  * @author DELL
  */
 public class Description {
-
     public void show() {
         try {
             Utility.clearScreen();
@@ -40,4 +39,3 @@ public class Description {
         }
     }
 }
-
