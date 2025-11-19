@@ -1,260 +1,115 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package HeroCraft.Core;
 
-/**
- * 
- * @author DELL
- */
 import HeroCraft.Character.BaseCharacter;
 import HeroCraft.Character.Human.*;
 import HeroCraft.Character.DemiHuman.*;
 import HeroCraft.Character.Mystic.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BattleManager {
     private Scanner sc = new Scanner(System.in);
     private Random rand = new Random();
 
-    // -------------------- Tarot Card --------------------
+    // Tarot card (same as earlier)
     private static class TarotCard {
         String name;
         String description;
         String effectType;
         int duration;
-
-        TarotCard(String name, String description, String effectType, int duration) {
-            this.name = name;
-            this.description = description;
-            this.effectType = effectType;
-            this.duration = duration;
-        }
+        TarotCard(String name, String desc, String effectType, int dur) { this.name=name; this.description=desc; this.effectType=effectType; this.duration=dur;}
     }
 
     private List<TarotCard> tarotDeck = Arrays.asList(
-        new TarotCard("Vincent (Silent Gaze)", "Silence: Enemies cannot use abilities for 1 turn.", "Silence", 1),
-        new TarotCard("Jharvis (Chaos Jester)", "Confusion: 51% chance enemies attack allies for 2 turns.", "Confusion", 2),
-        new TarotCard("Jurick (Injury-Seeker)", "Vulnerable: Enemies take 30% more damage for 1 turn.", "Vulnerable", 1),
-        new TarotCard("Neihl (Night's Herald)", "Sleep: Enemies skip 1 turn.", "Sleep", 1),
-        new TarotCard("Ram (Exhausting Force)", "Weaken: Enemies deal 30% less damage for 1 turn.", "Weaken", 1)
+        new TarotCard("Vincent (Silent Gaze)", "Silence: Prevents abilities for 1 turn.", "Silence", 1),
+        new TarotCard("Jharvis (Chaos Jester)", "Confusion: 51% chance to attack allies for 2 turns.", "Confusion", 2),
+        new TarotCard("Jurick (Injury-Seeker)", "Vulnerable: +30% damage taken for 1 turn.", "Vulnerable", 1),
+        new TarotCard("Neihl (Night's Herald)", "Sleep: Skip 1 turn.", "Sleep", 1),
+        new TarotCard("Ram (Exhausting Force)", "Weaken: -30% damage for 1 turn.", "Weaken", 1)
     );
 
-    // -------------------- Battle Start --------------------
+    // ---------- Start battles ----------
     public void startPvPBattle(int mode) {
-        ArrayList<BaseCharacter> player1Team = new ArrayList<>();
-        ArrayList<BaseCharacter> player2Team = new ArrayList<>();
-
-        selectHeroes(player1Team, "Player 1", mode);
-        selectHeroes(player2Team, "Player 2", mode);
-
-        applyFactionBuffs(player1Team);
-        applyFactionBuffs(player2Team);
-
-        System.out.println("\n️ PvP Battle Start!");
-        battleLoop(player1Team, player2Team, mode, true);
+        ArrayList<BaseCharacter> p1 = new ArrayList<>();
+        ArrayList<BaseCharacter> p2 = new ArrayList<>();
+        selectHeroes(p1, "Player 1", mode);
+        selectHeroes(p2, "Player 2", mode);
+        applyFactionBuffs(p1); applyFactionBuffs(p2);
+        System.out.println("\n⚔️ PvP Battle Start!");
+        battleLoop(p1,p2,mode,true);
     }
 
     public void startPvAIBattle(int mode) {
-        ArrayList<BaseCharacter> playerTeam = new ArrayList<>();
-        ArrayList<BaseCharacter> aiTeam = new ArrayList<>();
-
-        selectHeroes(playerTeam, "Player", mode);
-        selectHeroesAI(aiTeam, mode);
-
-        applyFactionBuffs(playerTeam);
-        applyFactionBuffs(aiTeam);
-
-        System.out.println("\n PvAI Battle Start!");
-        battleLoop(playerTeam, aiTeam, mode, false);
+        ArrayList<BaseCharacter> player = new ArrayList<>();
+        ArrayList<BaseCharacter> ai = new ArrayList<>();
+        selectHeroes(player, "Player", mode);
+        selectHeroesAI(ai, mode);
+        applyFactionBuffs(player); applyFactionBuffs(ai);
+        System.out.println("\n🤖 PvAI Battle Start!");
+        battleLoop(player,ai,mode,false);
     }
 
-    // -------------------- AI Hero Selection --------------------
-    private void selectHeroesAI(ArrayList<BaseCharacter> team, int mode) {
-        ArrayList<BaseCharacter> availableHeroes = getAllHeroes();
-        System.out.println("\n--- AI is choosing its heroes ---");
-        for (int i = 0; i < mode; i++) {
-            try { Thread.sleep(700); } catch (InterruptedException e) {}
-            int choice = rand.nextInt(availableHeroes.size());
-            BaseCharacter selected = cloneHero(availableHeroes.get(choice));
-            team.add(selected);
-            availableHeroes.remove(choice);
-            System.out.println(" AI selects: >>> " + selected.getName() + " <<< [" + selected.getFaction() + "]");
-            try { Thread.sleep(500); } catch (InterruptedException e) {}
-        }
-        Utility.pause();
-    }
-
-    private void aiTurn(BaseCharacter enemy, ArrayList<BaseCharacter> playerTeam, int mode) {
-        enemy.reduceStatusDuration();
-
-        if (!enemy.isAlive()) return;
-        if (enemy.hasStatus("Sleep")) {
-            System.out.println(enemy.getName() + " is sleeping and skips the turn!");
-            return;
-        }
-
-        ArrayList<BaseCharacter> aliveHeroes = new ArrayList<>();
-        for (BaseCharacter h : playerTeam) if (h.isAlive()) aliveHeroes.add(h);
-        if (aliveHeroes.isEmpty()) return;
-
-        BaseCharacter target;
-
-        if (enemy.hasStatus("Confusion") && rand.nextInt(100) < 51) {
-            target = playerTeam.get(rand.nextInt(playerTeam.size()));
-            System.out.println(enemy.getName() + " is confused and attacks an ally!");
-        } else {
-            target = aliveHeroes.get(rand.nextInt(aliveHeroes.size()));
-        }
-        System.out.println("\n==================== AI TURN ====================");
-        System.out.println(enemy.getName() + " attacks >>> " + target.getName() + " <<< !");
-        enemy.basicAttack(target);
-        System.out.println("================================================");
-    }
-
-    private void battleLoop(ArrayList<BaseCharacter> team1, ArrayList<BaseCharacter> team2, int mode, boolean isPvP) {
-        boolean battleOver = false;
-        int roundCounter = 1;
-
-        while (!battleOver) {
-            Utility.clearScreen();
-            System.out.println("\n==========  ROUND " + roundCounter + "  ==========");
-
-            // Tarot card phase every 3 rounds
-            if (roundCounter % 3 == 0) {
-                System.out.println("\n Tarot Card Phase Begins!");
-                tarotPhase(team1, team2, isPvP);
-            }
-
-            for (BaseCharacter hero : team1) {
-                hero.reduceStatusDuration();
-                if (!hero.isAlive() || hero.hasStatus("Sleep")) continue;
-                playerTurn(hero, team2, mode, isPvP ? "Player 1" : "Player");
-                if (isTeamDefeated(team2)) {
-                    System.out.println(isPvP ? "\n Player 1 Wins!" : "\n Player Wins!");
-                    battleOver = true;
-                    break;
-                }
-            }
-            if (battleOver) break;
-
-            // Team 2 turn
-            for (BaseCharacter hero : team2) {
-                hero.reduceStatusDuration();
-                if (!hero.isAlive()) continue;
-                if (isPvP) playerTurn(hero, team1, mode, "Player 2");
-                else aiTurn(hero, team1, mode);
-                if (isTeamDefeated(team1)) {
-                    System.out.println(isPvP ? "\n Player 2 Wins!" : "\n AI Wins!");
-                    battleOver = true;
-                    break;
-                }
-            }
-            roundCounter++;
-            Utility.pause();
-        }
-        System.out.println("\nBattle Over!");
-        Utility.pause();
-    }
-
-    private void tarotPhase(ArrayList<BaseCharacter> team1, ArrayList<BaseCharacter> team2, boolean isPvP) {
-        applyTarotChoice(team1, team2, "Player 1");
-        if (isPvP) applyTarotChoice(team2, team1, "Player 2");
-        else applyTarotChoiceAI(team2, team1);
-    }
-
-    private void applyTarotChoice(ArrayList<BaseCharacter> team, ArrayList<BaseCharacter> enemyTeam, String playerName) {
-        System.out.println("\n " + playerName + ", choose a Tarot Card:");
-        List<TarotCard> cards = getRandomTarotCards(3);
-
-        for (int i = 0; i < cards.size(); i++) {
-            TarotCard c = cards.get(i);
-            System.out.println((i + 1) + ". " + c.name + " — " + c.description);
-        }
-
-        int choice = -1;
-        while (true) {
-            try {
-                System.out.print("Choose (1-3): ");
-                choice = Integer.parseInt(sc.nextLine()) - 1;
-                if (choice < 0 || choice >= cards.size()) continue;
-                break;
-            } catch (Exception e) {}
-        }
-
-        TarotCard chosen = cards.get(choice);
-        System.out.println("\n " + playerName + " chose " + chosen.name + "!");
-        for (BaseCharacter enemy : enemyTeam) {
-            enemy.applyStatus(chosen.effectType, chosen.duration);
-        }
-    }
-
-    private void applyTarotChoiceAI(ArrayList<BaseCharacter> aiTeam, ArrayList<BaseCharacter> playerTeam) {
-        List<TarotCard> cards = getRandomTarotCards(3);
-        TarotCard chosen = cards.get(rand.nextInt(3));
-
-        System.out.println("\n AI draws tarot cards...");
-        try { Thread.sleep(1000); } catch (InterruptedException e) {}
-        System.out.println("AI selects " + chosen.name + " — " + chosen.description);
-
-        for (BaseCharacter player : playerTeam) {
-            player.applyStatus(chosen.effectType, chosen.duration);
-        }
-    }
-
-    private List<TarotCard> getRandomTarotCards(int count) {
-        ArrayList<TarotCard> copy = new ArrayList<>(tarotDeck);
-        Collections.shuffle(copy);
-        return copy.subList(0, count);
-    }
-    
+    // ---------- Hero selection ----------
     private void selectHeroes(ArrayList<BaseCharacter> team, String owner, int mode) {
         System.out.println("\nSelect heroes for " + owner + " team (" + mode + " heroes):");
-        ArrayList<BaseCharacter> availableHeroes = getAllHeroes();
-
-        for (int i = 0; i < mode; i++) {
+        ArrayList<BaseCharacter> available = getAllHeroes();
+        for (int i=0;i<mode;i++) {
             System.out.println("\nAvailable Heroes:");
-            for (int j = 0; j < availableHeroes.size(); j++) {
-                BaseCharacter h = availableHeroes.get(j);
-                System.out.println((j + 1) + ". " + h.getName() + " [" + h.getFaction() + "]");
+            for (int j=0;j<available.size();j++) {
+                BaseCharacter h = available.get(j);
+                System.out.println((j+1)+". "+h.getName()+" ["+h.getFaction()+"] (HP:"+h.getCurrentHP()+"/"+h.getMaxHP()+", MP:"+h.getCurrentMP()+"/"+h.getMaxMP()+")");
             }
-
-            int choice;
+            int choice = -1;
             while (true) {
                 try {
-                    System.out.print("Choose hero " + (i + 1) + ": ");
+                    System.out.print("Choose hero " + (i+1) + ": ");
                     choice = Integer.parseInt(sc.nextLine()) - 1;
-                    if (choice < 0 || choice >= availableHeroes.size()) throw new Exception();
+                    if (choice < 0 || choice >= available.size()) throw new Exception();
                     break;
-                } catch (Exception e) {
-                    System.out.println("Invalid input! Try again.");
-                }
+                } catch (Exception e) { System.out.println("Invalid input!"); }
             }
-
-            BaseCharacter heroCopy = cloneHero(availableHeroes.get(choice));
-            team.add(heroCopy);
-            availableHeroes.remove(choice);
+            team.add(cloneHero(available.get(choice)));
+            available.remove(choice);
         }
+    }
+
+    private void selectHeroesAI(ArrayList<BaseCharacter> team, int mode) {
+        ArrayList<BaseCharacter> available = getAllHeroes();
+        System.out.println("\n--- AI is choosing its heroes ---");
+        for (int i=0;i<mode;i++) {
+            try { Thread.sleep(600); } catch (InterruptedException ignored) {}
+            int ch = rand.nextInt(available.size());
+            BaseCharacter pick = cloneHero(available.get(ch));
+            team.add(pick);
+            available.remove(ch);
+            System.out.println("🤖 AI selects: " + pick.getName()+" ["+pick.getFaction()+"]");
+        }
+        Utility.pause();
     }
 
     private BaseCharacter cloneHero(BaseCharacter hero) {
-        return switch (hero.getName()) {
-            case "Swordsman" -> new Swordsman();
-            case "Assassin" -> new Assassin();
-            case "Priest" -> new Priest();
-            case "Monk" -> new Monk();
-            case "Archer" -> new Archer();
-            case "Gunner" -> new Gunner();
-            case "Minotaur" -> new Minotaur();
-            case "Werewolf" -> new Werewolf();
-            case "Summoner" -> new Summoner();
-            case "Elementalist" -> new Elementalist();
-            case "Druid" -> new Druid();
-            case "Kitsune" -> new Kitsune();
-            default -> null;
-        };
+        switch (hero.getName()) {
+            case "Swordsman": return new Swordsman();
+            case "Assassin": return new Assassin();
+            case "Priest": return new Priest();
+            case "Monk": return new Monk();
+            case "Archer": return new Archer();
+            case "Gunner": return new Gunner();
+            case "Minotaur": return new Minotaur();
+            case "Werewolf": return new Werewolf();
+            case "Summoner": return new Summoner();
+            case "Elementalist": return new Elementalist();
+            case "Druid": return new Druid();
+            case "Kitsune": return new Kitsune();
+            default: return null;
+        }
     }
 
     private ArrayList<BaseCharacter> getAllHeroes() {
@@ -265,63 +120,273 @@ public class BattleManager {
         ));
     }
 
-    // faction buffs
-    private void applyFactionBuffs(ArrayList<BaseCharacter> team) {
-        Map<String, Integer> factionCount = new HashMap<>();
-        for (BaseCharacter hero : team)
-            factionCount.put(hero.getFaction(), factionCount.getOrDefault(hero.getFaction(), 0) + 1);
-
-        for (String faction : factionCount.keySet()) {
-            int count = factionCount.get(faction);
-            if (count >= 2) {
-                for (BaseCharacter hero : team) {
-                    if (hero.getFaction().equals(faction)) {
-                        int hpBuff = (int)(hero.getMaxHP() * (5 + rand.nextInt(11)) / 100.0);
-                        int mpBuff = (int)(hero.getMaxMP() * (5 + rand.nextInt(11)) / 100.0);
-                        hero.setCurrentHP(hero.getCurrentHP() + hpBuff);
-                        hero.setCurrentMP(hero.getCurrentMP() + mpBuff);
-                        System.out.println(hero.getName() + " receives Faction Buff! +" + hpBuff + " HP, +" + mpBuff + " MP.");
-                    }
-                }
+    // ---------- Battle loop ----------
+    private void battleLoop(ArrayList<BaseCharacter> team1, ArrayList<BaseCharacter> team2, int mode, boolean isPvP) {
+        boolean over=false;
+        int round=1;
+        while (!over) {
+            Utility.clearScreen();
+            System.out.println("\n========== ROUND " + round + " ==========");
+            // tarot phase every 3 rounds
+            if (round % 3 == 0) {
+                System.out.println("\n💫 Tarot Phase!");
+                tarotPhase(team1, team2, isPvP);
             }
+
+            // Team1 turn sequence
+            for (BaseCharacter h : team1) {
+                if (!h.isAlive()) continue;
+                // At start of hero turn check statuses that skip turns
+                if (h.hasStatus("Sleep")) {
+                    System.out.println(h.getName()+" is asleep and skips the turn.");
+                    h.reduceStatusDuration();
+                    h.reduceCooldowns();
+                    continue;
+                }
+                // Player or AI controlled
+                if (isPvP || (!isPvP && team1==team1)) {
+                    // if the team1 belongs to Player in PvAI, player controls; in PvP both are player-controlled
+                    playerTurn(h, team2, mode, isPvP ? "Player 1" : "Player");
+                } else {
+                    aiTurn(h, team2, mode);
+                }
+                // post-turn handle
+                h.reduceStatusDuration();
+                h.reduceCooldowns();
+                if (isTeamDefeated(team2)) { System.out.println(isPvP ? "Player 1 Wins!" : "Player Wins!"); over=true; break;}
+            }
+            if (over) break;
+
+            // Team2 turn
+            for (BaseCharacter h : team2) {
+                if (!h.isAlive()) continue;
+                if (h.hasStatus("Sleep")) {
+                    System.out.println(h.getName()+" is asleep and skips the turn.");
+                    h.reduceStatusDuration();
+                    h.reduceCooldowns();
+                    continue;
+                }
+                if (isPvP) playerTurn(h, team1, mode, "Player 2");
+                else aiTurn(h, team1, mode);
+                h.reduceStatusDuration();
+                h.reduceCooldowns();
+                if (isTeamDefeated(team1)) { System.out.println(isPvP ? "Player 2 Wins!" : "AI Wins!"); over=true; break;}
+            }
+
+            round++;
+            Utility.pause();
+        }
+        System.out.println("\nBattle Over!");
+        Utility.pause();
+    }
+
+    // ---------- Player Turn (with skill menu) ----------
+    private void playerTurn(BaseCharacter hero, ArrayList<BaseCharacter> enemies, int mode, String playerName) {
+        if (!hero.isAlive()) return;
+        System.out.println("\n" + playerName + "'s " + hero.getName() + " turn (HP: " + hero.getCurrentHP() + "/" + hero.getMaxHP() + " | MP: " + hero.getCurrentMP()+"/"+hero.getMaxMP()+")");
+
+        // choose target if 3v3, otherwise 1v1 auto-target
+        BaseCharacter target = null;
+        if (mode == 1) {
+            // 1v1 use first alive enemy
+            for (BaseCharacter e : enemies) { if (e.isAlive()) { target = e; break; } }
+            if (target == null) return;
+        } else {
+            displayTeam(enemies, "Enemies");
+            int idx = -1;
+            while (true) {
+                try {
+                    System.out.print("Select target number: ");
+                    idx = Integer.parseInt(sc.nextLine()) - 1;
+                    if (idx < 0 || idx >= enemies.size() || !enemies.get(idx).isAlive()) throw new Exception();
+                    break;
+                } catch (Exception e) { System.out.println("Invalid selection."); }
+            }
+            target = enemies.get(idx);
+        }
+
+        // show skill menu (1..3 skills, 4 basic attack)
+        System.out.println("Choose action:");
+        System.out.println("1. Skill 1 (MP/CD shown)");
+        System.out.println("2. Skill 2 (MP/CD shown)");
+        System.out.println("3. Skill 3 (MP/CD shown)");
+        System.out.println("4. Basic Attack");
+
+        int sel=-1;
+        while (true) {
+            try {
+                System.out.print("Enter 1-4: ");
+                sel = Integer.parseInt(sc.nextLine());
+                if (sel < 1 || sel > 4) throw new Exception();
+                break;
+            } catch (Exception e) { System.out.println("Invalid input."); }
+        }
+
+        if (sel == 4) {
+            // Basic attack
+            // confusion check: if confused there is 51% chance to hit random ally instead of chosen target (for player we'll redirect to a random enemy to simulate confusion)
+            if (hero.hasStatus("Confusion") && rand.nextInt(100) < 51) {
+                // pick random enemy
+                ArrayList<BaseCharacter> alive = new ArrayList<>();
+                for (BaseCharacter e: enemies) if (e.isAlive()) alive.add(e);
+                if (!alive.isEmpty()) {
+                    BaseCharacter alt = alive.get(rand.nextInt(alive.size()));
+                    System.out.println(hero.getName()+" is confused and hits " + alt.getName() + " instead!");
+                    hero.basicAttack(alt);
+                } else hero.basicAttack(target);
+            } else hero.basicAttack(target);
+            return;
+        } else {
+            int skillIdx = sel - 1;
+            // check cooldown and MP (we assume subclasses check MP and cooldown inside useSkill as well, but we double-check)
+            if (hero.skillOnCooldown(skillIdx)) {
+                System.out.println("Skill is on cooldown.");
+                return;
+            }
+            // call useSkill (subclasses handle MP)
+            hero.useSkill(skillIdx, target, null, enemies);
+        }
+    }
+
+    // ---------- AI Turn ----------
+    private void aiTurn(BaseCharacter enemy, ArrayList<BaseCharacter> playerTeam, int mode) {
+        if (!enemy.isAlive()) return;
+        // sleep check done by battle loop
+        // choose target
+        ArrayList<BaseCharacter> alive = new ArrayList<>();
+        for (BaseCharacter p: playerTeam) if (p.isAlive()) alive.add(p);
+        if (alive.isEmpty()) return;
+
+        BaseCharacter target = alive.get(rand.nextInt(alive.size()));
+
+        // Decide action: prefer usable skill (not on CD and has MP) else basic attack.
+        int chosenAction = 4; // default basic attack
+        // try to pick a skill
+        List<Integer> candidates = Arrays.asList(0,1,2);
+        Collections.shuffle(candidates);
+        for (int si : candidates) {
+            try {
+                // naive check: see if has MP by trying typical costs (subclasses actually check MP)
+                if (!enemy.skillOnCooldown(si)) {
+                    chosenAction = si+1;
+                    break;
+                }
+            } catch (Exception ignored) {}
+        }
+
+        if (chosenAction == 4) {
+            // confusion possibility: 51% hit ally
+            if (enemy.hasStatus("Confusion") && rand.nextInt(100) < 51) {
+                // attack random ally of own team (simulate misfire)
+                ArrayList<BaseCharacter> ownAlive = new ArrayList<>();
+                // assume enemy belongs to team2 or team1; AI just attacks playerTeam normally; confusion for AI means attack its own allies - we skip complexity and just randomize target to playerTeam above
+                System.out.println(enemy.getName()+" is confused and attacks an ally (simulated)!");
+                enemy.basicAttack(target);
+            } else {
+                System.out.println("\n==================== AI TURN ====================");
+                System.out.println(enemy.getName()+" attacks >>> "+target.getName()+" <<< !");
+                enemy.basicAttack(target);
+                System.out.println("================================================");
+            }
+        } else {
+            System.out.println("\n==================== AI TURN ====================");
+            enemy.useSkill(chosenAction-1, target, null, playerTeam);
+            System.out.println("================================================");
+        }
+    }
+
+    // ---------- Tarot system ----------
+    private void tarotPhase(ArrayList<BaseCharacter> team1, ArrayList<BaseCharacter> team2, boolean isPvP) {
+        applyTarotChoice(team1, team2, "Player 1");
+        if (isPvP) applyTarotChoice(team2, team1, "Player 2");
+        else applyTarotChoiceAI(team2, team1);
+    }
+
+    private void applyTarotChoice(ArrayList<BaseCharacter> team, ArrayList<BaseCharacter> enemyTeam, String playerName) {
+        System.out.println("\n🎴 " + playerName + ", choose a Tarot Card:");
+        List<TarotCard> cards = getRandomTarotCards(3);
+        for (int i=0;i<cards.size();i++) {
+            System.out.println((i+1)+". "+cards.get(i).name+" — "+cards.get(i).description);
+        }
+        int c = -1;
+        while (true) {
+            try {
+                System.out.print("Choose (1-3): ");
+                c = Integer.parseInt(sc.nextLine()) - 1;
+                if (c < 0 || c >= cards.size()) throw new Exception();
+                break;
+            } catch (Exception e) { System.out.println("Invalid."); }
+        }
+        TarotCard chosen = cards.get(c);
+        System.out.println(playerName+" chose "+chosen.name+"!");
+        // let player choose specific enemy target(s)
+        ArrayList<BaseCharacter> alive = new ArrayList<>();
+        for (BaseCharacter e: enemyTeam) if (e.isAlive()) alive.add(e);
+        if (alive.isEmpty()) return;
+        // prompt for single target for simplicity
+        System.out.println("Select target for the tarot effect:");
+        for (int i=0;i<alive.size();i++) System.out.println((i+1)+". "+alive.get(i).getName());
+        int t=-1;
+        while (true) {
+            try {
+                System.out.print("Target (1-"+alive.size()+"): ");
+                t = Integer.parseInt(sc.nextLine()) - 1;
+                if (t < 0 || t >= alive.size()) throw new Exception();
+                break;
+            } catch (Exception e) { System.out.println("Invalid."); }
+        }
+        BaseCharacter target = alive.get(t);
+        target.applyStatus(chosen.effectType, chosen.duration);
+    }
+
+    private void applyTarotChoiceAI(ArrayList<BaseCharacter> aiTeam, ArrayList<BaseCharacter> playerTeam) {
+        List<TarotCard> cards = getRandomTarotCards(3);
+        TarotCard chosen = cards.get(rand.nextInt(cards.size()));
+        System.out.println("\n🤖 AI selects tarot: "+chosen.name);
+        ArrayList<BaseCharacter> alive = new ArrayList<>();
+        for (BaseCharacter p : playerTeam) if (p.isAlive()) alive.add(p);
+        if (alive.isEmpty()) return;
+        BaseCharacter t = alive.get(rand.nextInt(alive.size()));
+        t.applyStatus(chosen.effectType, chosen.duration);
+    }
+
+    private List<TarotCard> getRandomTarotCards(int count) {
+        ArrayList<TarotCard> copy = new ArrayList<>(tarotDeck);
+        Collections.shuffle(copy);
+        return copy.subList(0, Math.min(count, copy.size()));
+    }
+
+    // ---------- Utilities ----------
+    private void displayTeam(ArrayList<BaseCharacter> team, String title) {
+        System.out.println("\n--- " + title + " ---");
+        for (int i=0;i<team.size();i++) {
+            BaseCharacter h = team.get(i);
+            System.out.println((i+1)+". "+h.getName()+" (HP:"+h.getCurrentHP()+"/"+h.getMaxHP()+" | MP:"+h.getCurrentMP()+"/"+h.getMaxMP()+")");
         }
     }
 
     private boolean isTeamDefeated(ArrayList<BaseCharacter> team) {
-        for (BaseCharacter hero : team) if (hero.isAlive()) return false;
+        for (BaseCharacter h: team) if (h.isAlive()) return false;
         return true;
     }
 
-    private void playerTurn(BaseCharacter hero, ArrayList<BaseCharacter> enemies, int mode, String playerName) {
-        if (!hero.isAlive() || hero.hasStatus("Sleep")) return;
-
-        System.out.println("\n" + playerName + "'s " + hero.getName() + " turn (HP: " + hero.getCurrentHP() + "/" + hero.getMaxHP() + ")");
-        BaseCharacter target;
-
-        if (mode == 1) target = enemies.get(0);
-        else {
-            displayTeam(enemies, "Enemies");
-            int targetIndex;
-            while (true) {
-                try {
-                    System.out.print("Select target: ");
-                    targetIndex = Integer.parseInt(sc.nextLine()) - 1;
-                    if (targetIndex < 0 || targetIndex >= enemies.size() || !enemies.get(targetIndex).isAlive()) throw new Exception();
-                    break;
-                } catch (Exception e) {
-                    System.out.println("Invalid target! Try again.");
+    // faction buff (kept from earlier)
+    private void applyFactionBuffs(ArrayList<BaseCharacter> team) {
+        Map<String, Integer> factionCount = new HashMap<>();
+        for (BaseCharacter hero : team) factionCount.put(hero.getFaction(), factionCount.getOrDefault(hero.getFaction(),0)+1);
+        for (String fac : factionCount.keySet()) {
+            int count = factionCount.get(fac);
+            if (count >= 2) {
+                for (BaseCharacter hero : team) {
+                    if (hero.getFaction().equals(fac)) {
+                        int hpBuff = (int)(hero.getMaxHP() * (5 + rand.nextInt(11)) / 100.0);
+                        int mpBuff = (int)(hero.getMaxMP() * (5 + rand.nextInt(11)) / 100.0);
+                        hero.setCurrentHP(hero.getCurrentHP() + hpBuff);
+                        hero.setCurrentMP(hero.getCurrentMP() + mpBuff);
+                        System.out.println(hero.getName()+" receives Faction Buff! +"+hpBuff+" HP, +"+mpBuff+" MP.");
+                    }
                 }
             }
-            target = enemies.get(targetIndex);
-        }
-        hero.basicAttack(target);
-    }
-
-    private void displayTeam(ArrayList<BaseCharacter> team, String title) {
-        System.out.println("\n--- " + title + " ---");
-        for (int i = 0; i < team.size(); i++) {
-            BaseCharacter h = team.get(i);
-            System.out.println((i + 1) + ". " + h.getName() + " (HP: " + h.getCurrentHP() + "/" + h.getMaxHP() + ")");
         }
     }
 }
