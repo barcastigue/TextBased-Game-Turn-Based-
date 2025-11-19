@@ -182,71 +182,87 @@ public class BattleManager {
 
     // ---------- Player Turn (with skill menu) ----------
     private void playerTurn(BaseCharacter hero, ArrayList<BaseCharacter> enemies, int mode, String playerName) {
-        if (!hero.isAlive()) return;
-        System.out.println("\n" + playerName + "'s " + hero.getName() + " turn (HP: " + hero.getCurrentHP() + "/" + hero.getMaxHP() + " | MP: " + hero.getCurrentMP()+"/"+hero.getMaxMP()+")");
+    if (!hero.isAlive()) return;
 
-        // choose target if 3v3, otherwise 1v1 auto-target
-        BaseCharacter target = null;
-        if (mode == 1) {
-            // 1v1 use first alive enemy
-            for (BaseCharacter e : enemies) { if (e.isAlive()) { target = e; break; } }
-            if (target == null) return;
-        } else {
-            displayTeam(enemies, "Enemies");
-            int idx = -1;
-            while (true) {
-                try {
-                    System.out.print("Select target number: ");
-                    idx = Integer.parseInt(sc.nextLine()) - 1;
-                    if (idx < 0 || idx >= enemies.size() || !enemies.get(idx).isAlive()) throw new Exception();
-                    break;
-                } catch (Exception e) { System.out.println("Invalid selection."); }
-            }
-            target = enemies.get(idx);
+    System.out.println("\n" + playerName + "'s " + hero.getName() +
+        " turn (HP: " + hero.getCurrentHP() + "/" + hero.getMaxHP() +
+        " | MP: " + hero.getCurrentMP() + "/" + hero.getMaxMP() + ")");
+
+    // choose target if 3v3, otherwise 1v1 auto-target
+    BaseCharacter target = null;
+    if (mode == 1) {
+        for (BaseCharacter e : enemies) {
+            if (e.isAlive()) { target = e; break; }
         }
-
-        // show skill menu (1..3 skills, 4 basic attack)
-        System.out.println("Choose action:");
-        System.out.println("1. Skill 1 (MP/CD shown)");
-        System.out.println("2. Skill 2 (MP/CD shown)");
-        System.out.println("3. Skill 3 (MP/CD shown)");
-        System.out.println("4. Basic Attack");
-
-        int sel=-1;
+        if (target == null) return;
+    } else {
+        displayTeam(enemies, "Enemies");
+        int idx = -1;
         while (true) {
             try {
-                System.out.print("Enter 1-4: ");
-                sel = Integer.parseInt(sc.nextLine());
-                if (sel < 1 || sel > 4) throw new Exception();
+                System.out.print("Select target number: ");
+                idx = Integer.parseInt(sc.nextLine()) - 1;
+                if (idx < 0 || idx >= enemies.size() || !enemies.get(idx).isAlive()) throw new Exception();
                 break;
-            } catch (Exception e) { System.out.println("Invalid input."); }
+            } catch (Exception e) { System.out.println("Invalid selection."); }
         }
+        target = enemies.get(idx);
+    }
 
-        if (sel == 4) {
-            // Basic attack
-            // confusion check: if confused there is 51% chance to hit random ally instead of chosen target (for player we'll redirect to a random enemy to simulate confusion)
-            if (hero.hasStatus("Confusion") && rand.nextInt(100) < 51) {
-                // pick random enemy
-                ArrayList<BaseCharacter> alive = new ArrayList<>();
-                for (BaseCharacter e: enemies) if (e.isAlive()) alive.add(e);
-                if (!alive.isEmpty()) {
-                    BaseCharacter alt = alive.get(rand.nextInt(alive.size()));
-                    System.out.println(hero.getName()+" is confused and hits " + alt.getName() + " instead!");
-                    hero.basicAttack(alt);
-                } else hero.basicAttack(target);
-            } else hero.basicAttack(target);
-            return;
-        } else {
+    int sel = -1;
+    while (true) {
+        // ---------- Dynamic skill menu ----------
+        System.out.println("\nChoose action:");
+        for (int i = 1; i <= 3; i++) {
+            String skillName = hero.getSkillName(i);
+            int mpCost = hero.getSkillMPCost(i);
+            int cd = hero.getSkillCooldown(i);
+            System.out.println(i + ". " + skillName + " (MP: " + mpCost + ", CD: " + cd + ")");
+        }
+        System.out.println("4. Basic Attack");
+
+        try {
+            System.out.print("Enter 1-4: ");
+            sel = Integer.parseInt(sc.nextLine());
+            if (sel < 1 || sel > 4) throw new Exception();
+
+            if (sel == 4) break; // Basic attack always usable
+
             int skillIdx = sel - 1;
-            // check cooldown and MP (we assume subclasses check MP and cooldown inside useSkill as well, but we double-check)
-            if (hero.skillOnCooldown(skillIdx)) {
-                System.out.println("Skill is on cooldown.");
-                return;
+            int mpCost = hero.getSkillMPCost(sel);
+            int cd = hero.getSkillCooldown(sel);
+
+            if (cd > 0) {
+                System.out.println("Skill is on cooldown. Choose another action.");
+                continue;
             }
-            // call useSkill (subclasses handle MP)
-            hero.useSkill(skillIdx, target, null, enemies);
+            if (!hero.hasMP(mpCost)) {
+                System.out.println("Not enough MP to cast this skill. Choose another action.");
+                continue;
+            }
+            break; // valid skill
+        } catch (Exception e) {
+            System.out.println("Invalid input. Try again.");
         }
     }
+
+    // ---------- Execute action ----------
+    if (sel == 4) {
+        // Basic attack
+        if (hero.hasStatus("Confusion") && rand.nextInt(100) < 51) {
+            ArrayList<BaseCharacter> alive = new ArrayList<>();
+            for (BaseCharacter e : enemies) if (e.isAlive()) alive.add(e);
+            BaseCharacter alt = alive.get(rand.nextInt(alive.size()));
+            System.out.println(hero.getName() + " is confused and hits " + alt.getName() + " instead!");
+            hero.basicAttack(alt);
+        } else {
+            hero.basicAttack(target);
+        }
+    } else {
+        int skillIdx = sel - 1;
+        hero.useSkill(skillIdx, target, null, enemies);
+    }
+}
 
     // ---------- AI Turn ----------
     private void aiTurn(BaseCharacter enemy, ArrayList<BaseCharacter> playerTeam, int mode) {
