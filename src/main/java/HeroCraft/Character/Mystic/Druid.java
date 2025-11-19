@@ -5,44 +5,50 @@ import java.util.ArrayList;
 
 public class Druid extends BaseCharacter {
     public Druid() {
-        super("Druid", "Mystic", 95, 130);
-        skillMaxCooldowns[0]=2; skillMaxCooldowns[1]=3; skillMaxCooldowns[2]=7;
+        super("Druid", "Mystic", 110, 130);
+
+        skillNames[0] = "Roots of Binding";
+        skillNames[1] = "Iron Bark Armor";
+        skillNames[2] = "Blessing of the Forest";
+
+        skillMPCosts[0] = 20;
+        skillMPCosts[1] = 15;
+        skillMPCosts[2] = 70;
+
+        skillMaxCooldowns[0] = 3;
+        skillMaxCooldowns[1] = 2;
+        skillMaxCooldowns[2] = 6;
     }
 
     @Override
     public void useSkill(int skillIndex, BaseCharacter target, ArrayList<BaseCharacter> allies, ArrayList<BaseCharacter> enemies) {
         switch(skillIndex) {
             case 0 -> { // Roots of Binding
-                if (skillOnCooldown(0)) { System.out.println("Roots of Binding on cooldown."); return; }
-                int cost=20; if(!hasMP(cost)){System.out.println("Not enough MP.");return;}
-                spendMP(cost);
-                for (BaseCharacter e : enemies) { e.takeDamage(15 + rand.nextInt(6)); e.applyStatus("Rooted",2); }
-                for (BaseCharacter a : allies) { a.applyStatus("TempHP10",1); }
-                System.out.println(name+" casts Roots of Binding: damages enemies, roots them, allies gain Temp HP.");
-                skillCooldowns[0]=skillMaxCooldowns[0];
+                if (skillOnCooldown(0)) { System.out.println("Roots of Binding is on cooldown."); return; }
+                if (!hasMP(skillMPCosts[0])) { System.out.println("Not enough MP."); return; }
+                spendMP(skillMPCosts[0]);
+                target.applyStatus("Rooted", 2);
+                System.out.println(name + " casts Roots of Binding! " + target.getName() + " is rooted!");
+                skillCooldowns[0] = skillMaxCooldowns[0];
             }
             case 1 -> { // Iron Bark Armor
-                if (skillOnCooldown(1)) { System.out.println("Iron Bark Armor on cooldown."); return; }
-                int cost=15; if(!hasMP(cost)){System.out.println("Not enough MP.");return;}
-                spendMP(cost);
-                target.applyStatus("Regen10",3);
-                target.applyStatus("TempHP15",3);
-                System.out.println(name+" grants Iron Bark to "+target.getName()+" for 3 turns.");
-                skillCooldowns[1]=skillMaxCooldowns[1];
+                if (skillOnCooldown(1)) { System.out.println("Iron Bark Armor is on cooldown."); return; }
+                if (!hasMP(skillMPCosts[1])) { System.out.println("Not enough MP."); return; }
+                spendMP(skillMPCosts[1]);
+                applyStatus("Shield", 2);
+                System.out.println(name + " uses Iron Bark Armor and gains a shield for 2 turns!");
+                skillCooldowns[1] = skillMaxCooldowns[1];
             }
             case 2 -> { // Blessing of the Forest
-                if (skillOnCooldown(2)) { System.out.println("Blessing of the Forest on cooldown."); return; }
-                int cost=70; if(!hasMP(cost)){System.out.println("Not enough MP.");return;}
-                spendMP(cost);
-                for (BaseCharacter a : allies) {
-                    a.heal(40);
-                    // remove statuses: simple approach remove Poison/Burn/Bleeding etc
-                    a.removeStatus("Poison"); a.removeStatus("Burn"); a.removeStatus("Bleeding");
-                    a.applyStatus("TempHP10",1);
-                    a.restoreMP(20);
-                    System.out.println(name+" heals "+a.getName()+" and removes bad statuses.");
+                if (skillOnCooldown(2)) { System.out.println("Blessing of the Forest is on cooldown."); return; }
+                if (!hasMP(skillMPCosts[2])) { System.out.println("Not enough MP."); return; }
+                spendMP(skillMPCosts[2]);
+                for (BaseCharacter a : allies) if (a.isAlive()) {
+                    int healAmt = 30 + rand.nextInt(21);
+                    a.heal(healAmt);
+                    System.out.println(name + " heals " + a.getName() + " for " + healAmt + " HP with Blessing of the Forest!");
                 }
-                skillCooldowns[2]=skillMaxCooldowns[2];
+                skillCooldowns[2] = skillMaxCooldowns[2];
             }
             default -> System.out.println("Invalid skill.");
         }
