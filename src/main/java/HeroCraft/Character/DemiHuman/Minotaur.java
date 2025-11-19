@@ -5,49 +5,51 @@ import java.util.ArrayList;
 
 public class Minotaur extends BaseCharacter {
     public Minotaur() {
-        super("Minotaur", "Demi-Human", 150, 60);
-        skillMaxCooldowns[0]=3; skillMaxCooldowns[1]=4; skillMaxCooldowns[2]=6;
+        super("Minotaur", "DemiHuman", 140, 80);
+
+        skillNames[0] = "Taunting Roar";
+        skillNames[1] = "Blood Offering";
+        skillNames[2] = "Earthshatter";
+
+        skillMPCosts[0] = 20;
+        skillMPCosts[1] = 25;
+        skillMPCosts[2] = 60;
+
+        skillMaxCooldowns[0] = 3;
+        skillMaxCooldowns[1] = 4;
+        skillMaxCooldowns[2] = 5;
     }
 
     @Override
     public void useSkill(int skillIndex, BaseCharacter target, ArrayList<BaseCharacter> allies, ArrayList<BaseCharacter> enemies) {
         switch(skillIndex) {
             case 0 -> { // Taunting Roar
-                if (skillOnCooldown(0)) { System.out.println("Taunting Roar on cooldown."); return; }
-                int cost=20; if(!hasMP(cost)){System.out.println("Not enough MP.");return;}
-                spendMP(cost);
-                for (BaseCharacter e : enemies) e.applyStatus("Taunt",1);
-                applyStatus("DamageReduce20",1);
-                System.out.println(name+" uses Taunting Roar: taunts enemies and gains 20% DR for 1 turn.");
-                skillCooldowns[0]=skillMaxCooldowns[0];
+                if (skillOnCooldown(0)) { System.out.println("Taunting Roar is on cooldown."); return; }
+                if (!hasMP(skillMPCosts[0])) { System.out.println("Not enough MP."); return; }
+                spendMP(skillMPCosts[0]);
+                target.applyStatus("Taunt", 2);
+                System.out.println(name + " uses Taunting Roar! " + target.getName() + " is forced to target Minotaur.");
+                skillCooldowns[0] = skillMaxCooldowns[0];
             }
             case 1 -> { // Blood Offering
-                if (skillOnCooldown(1)) { System.out.println("Blood Offering on cooldown."); return; }
-                int cost=25; if(hasMP(cost)) {
-                    spendMP(cost);
-                    for (BaseCharacter a: allies) a.restoreMP(30);
-                    System.out.println(name+" restores 30 MP to allies.");
-                } else {
-                    // not enough mp: pay hp instead
-                    int hpCost = 20;
-                    setCurrentHP(currentHP - hpCost);
-                    for (BaseCharacter a: allies) a.restoreMP(30);
-                    System.out.println(name+" had low MP, pays 20 HP to restore allies' MP.");
-                }
-                skillCooldowns[1]=skillMaxCooldowns[1];
+                if (skillOnCooldown(1)) { System.out.println("Blood Offering is on cooldown."); return; }
+                if (!hasMP(skillMPCosts[1])) { System.out.println("Not enough MP."); return; }
+                spendMP(skillMPCosts[1]);
+                target.takeDamage(30);
+                heal(20);
+                System.out.println(name + " uses Blood Offering on " + target.getName() + " for 30 damage and heals 20 HP!");
+                skillCooldowns[1] = skillMaxCooldowns[1];
             }
             case 2 -> { // Earthshatter
-                if (skillOnCooldown(2)) { System.out.println("Earthshatter on cooldown."); return; }
-                int cost=60; if(!hasMP(cost)){System.out.println("Not enough MP.");return;}
-                spendMP(cost);
-                for (BaseCharacter e : enemies) {
-                    int dmg=35;
+                if (skillOnCooldown(2)) { System.out.println("Earthshatter is on cooldown."); return; }
+                if (!hasMP(skillMPCosts[2])) { System.out.println("Not enough MP."); return; }
+                spendMP(skillMPCosts[2]);
+                for (BaseCharacter e : enemies) if (e.isAlive()) {
+                    int dmg = 40 + rand.nextInt(21);
                     e.takeDamage(dmg);
-                    e.applyStatus("Vulnerable",2);
-                    System.out.println(name+" Earthshatters "+e.getName()+" for "+dmg+" and makes them Vulnerable.");
+                    System.out.println(name + " hits " + e.getName() + " with Earthshatter for " + dmg + " damage!");
                 }
-                applyStatus("DamageReduce50",2); // self gains 50% DR for short time
-                skillCooldowns[2]=skillMaxCooldowns[2];
+                skillCooldowns[2] = skillMaxCooldowns[2];
             }
             default -> System.out.println("Invalid skill.");
         }
