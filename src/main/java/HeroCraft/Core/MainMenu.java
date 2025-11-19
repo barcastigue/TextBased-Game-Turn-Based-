@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package HeroCraft.Core;
 
 /**
@@ -33,7 +29,7 @@ public class MainMenu {
                 switch (choice) {
                     case "1" -> gameManager.startGame();
                     case "2" -> description.show();
-                    case "3" -> isRunning = confirmQuit();
+                    case "3" -> isRunning = !confirmQuit();
                     default -> {
                         System.out.println("Invalid choice! Please enter 1, 2, or 3.");
                         Utility.pause();
