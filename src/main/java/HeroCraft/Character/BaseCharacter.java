@@ -14,6 +14,10 @@ public abstract class BaseCharacter {
 
     protected Random rand = new Random();
 
+    public void resetHPMP() {
+        this.currentMP = this.maxMP;
+    }
+
     // Status system
     protected static class StatusEffect {
         public String name;
