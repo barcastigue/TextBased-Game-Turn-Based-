@@ -8,6 +8,7 @@ package HeroCraft.Core;
  * 
  * @author DELL
  */
+import HeroCraft.Character.BaseCharacter;
 import java.util.Scanner;
 
 public class GameManager {
@@ -22,10 +23,11 @@ public class GameManager {
             switch (choice) {
                 case "1" -> startGame();
                 case "2" -> showDescription();
-                case "3" -> {
+                case "3" -> startArcadeMode();
+                case "4" -> {
                     if (confirmQuit()) running = false;
                 }
-                default -> System.out.println("Invalid choice! Please enter 1, 2, or 3.");
+                default -> System.out.println("Invalid choice! Please enter 1, 2, 3, or 4.");
             }
         }
     }
@@ -34,7 +36,8 @@ public class GameManager {
         System.out.println("\n========== HERO BATTLE GAME ==========");
         System.out.println("1. Start Game");
         System.out.println("2. Description");
-        System.out.println("3. Quit");
+        System.out.println("3. Arcade Mode");
+        System.out.println("4. Quit");
         System.out.print("Select an option: ");
     }
 
@@ -47,6 +50,12 @@ public class GameManager {
         else battle.startPvAIBattle(battleType);
 
         if (playAgain()) startGame();
+    }
+
+    private static void startArcadeMode() {
+        BattleManager battle = new BattleManager();
+        BaseCharacter selectedHero = battle.selectSingleHeroForArcade();
+        battle.startArcadeMode(selectedHero);
     }
 
     private static int chooseGameMode() {
