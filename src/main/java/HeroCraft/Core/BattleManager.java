@@ -18,7 +18,10 @@ public class BattleManager {
     private Scanner sc = new Scanner(System.in);
     private Random rand = new Random();
 
-    // Tarot card (same as earlier)
+    void startBattle(ArrayList<BaseCharacter> team1, ArrayList<BaseCharacter> team2) {
+
+    }
+
     private static class TarotCard {
         String name;
         String description;
@@ -93,6 +96,27 @@ public class BattleManager {
         }
         Utility.pause();
     }
+    
+    BaseCharacter selectSingleHeroForArcade() {
+    ArrayList<BaseCharacter> available = getAllHeroes();
+    for (int i = 0; i < available.size(); i++) {
+        BaseCharacter h = available.get(i);
+        System.out.println((i + 1) + ". " + h.getName() + " [" + h.getFaction() + "]");
+    }
+    int idx = -1;
+    while (true) {
+        try {
+            System.out.print("Select your hero: ");
+            idx = Integer.parseInt(sc.nextLine()) - 1;
+            if (idx < 0 || idx >= available.size()) throw new Exception();
+            break;
+        } catch (Exception e) {
+            System.out.println("Invalid input.");
+        }
+    }
+    return cloneHero(available.get(idx));
+}
+
 
     private BaseCharacter cloneHero(BaseCharacter hero) {
         switch (hero.getName()) {
@@ -405,4 +429,52 @@ public class BattleManager {
             }
         }
     }
+    public void startArcadeMode(BaseCharacter player) {
+        ArrayList<BaseCharacter> enemyTeam = new ArrayList<>();
+        int winCount = 0;
+        System.out.println("\n--- Arcade Mode Start! ---");
+
+    while (player.isAlive()) {
+        enemyTeam.clear();
+        BaseCharacter enemy = cloneHero(getAllHeroes().get(rand.nextInt(getAllHeroes().size())));
+        enemyTeam.add(enemy);
+        player.resetHPMP();
+
+        System.out.println("\n--- New Enemy Approaches: " + enemy.getName() + " [" + enemy.getFaction() + "] ---");
+        battleLoopArcade(player, enemyTeam);
+
+        if (player.isAlive()) {
+            winCount++;
+            System.out.println("Enemy defeated! Total Wins: " + winCount);
+            Utility.pause();
+        }
+    }
+
+    System.out.println("\nPlayer defeated in Arcade Mode! Total Wins: " + winCount);
+    Utility.pause();
+}
+
+
+        private void battleLoopArcade(BaseCharacter player, ArrayList<BaseCharacter> enemyTeam) {
+        boolean over = false;
+        while (!over) {
+            Utility.clearScreen();
+            System.out.println("\nPlayer HP: " + player.getCurrentHP() + "/" + player.getMaxHP() + 
+                               " | MP: " + player.getCurrentMP() + "/" + player.getMaxMP());
+            ArrayList<BaseCharacter> aliveEnemies = new ArrayList<>();
+            for (BaseCharacter e : enemyTeam) if (e.isAlive()) aliveEnemies.add(e);
+            if (aliveEnemies.isEmpty()) { over = true; break; }
+            playerTurn(player, enemyTeam, 1, "Player");
+            player.reduceStatusDuration();
+            player.reduceCooldowns();
+            for (BaseCharacter e : enemyTeam) {
+                if (!e.isAlive()) continue;
+                aiTurn(e, new ArrayList<>(Arrays.asList(player)), 1);
+                e.reduceStatusDuration();
+                e.reduceCooldowns();
+            }
+            if (!player.isAlive()) { over = true; break; }
+        }
+    }
+
 }
