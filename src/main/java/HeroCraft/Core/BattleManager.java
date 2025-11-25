@@ -45,7 +45,16 @@ public class BattleManager {
         selectHeroes(p1, "Player 1", mode);
         selectHeroes(p2, "Player 2", mode);
         applyFactionBuffs(p1); applyFactionBuffs(p2);
-        System.out.println("\n⚔️ PvP Battle Start!");
+        System.out.println("\n");
+        System.out.println("████████████████████████████████");
+        System.out.println("██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██");
+        System.out.println("██▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓██");
+        System.out.println("██▓▒▒   PvP Battle Start!   ▒▒▓█");
+        System.out.println("██▓▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▓██");
+        System.out.println("██▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓██");
+        System.out.println("████████████████████████████████");
+        System.out.println("\n");
+
         battleLoop(p1,p2,mode,true);
     }
 
@@ -55,68 +64,161 @@ public class BattleManager {
         selectHeroes(player, "Player", mode);
         selectHeroesAI(ai, mode);
         applyFactionBuffs(player); applyFactionBuffs(ai);
-        System.out.println("\n🤖 PvAI Battle Start!");
+        System.out.println("\n PvAI Battle Start!");
         battleLoop(player,ai,mode,false);
     }
 
     // ---------- Hero selection ----------
     private void selectHeroes(ArrayList<BaseCharacter> team, String owner, int mode) {
-        System.out.println("\nSelect heroes for " + owner + " team (" + mode + " heroes):");
+        System.out.println("\n╔══════════════════════════════════════════════╗");
+        System.out.println("║            " + owner + " Hero Selection           ║");
+        System.out.println("╚══════════════════════════════════════════════╝");
+
         ArrayList<BaseCharacter> available = getAllHeroes();
-        for (int i=0;i<mode;i++) {
-            System.out.println("\nAvailable Heroes:");
-            for (int j=0;j<available.size();j++) {
+        for (int i = 0; i < mode; i++) {
+            // Header for available heroes
+            System.out.println("\n╔═════════════════════════════════════════════╗");
+            System.out.println("║                Available Heroes              ║");
+            System.out.println("╠════╦══════════════════╦════════════╦════════╣");
+            System.out.printf("║ %-2s │ %-16s │ %-10s │ %-6s ║\n", "No", "Hero Name", "Faction", "HP/MP");
+            System.out.println("╠════╬══════════════════╬════════════╬════════╣");
+
+            // List heroes
+            for (int j = 0; j < available.size(); j++) {
                 BaseCharacter h = available.get(j);
-                System.out.println((j+1)+". "+h.getName()+" ["+h.getFaction()+"] (HP:"+h.getCurrentHP()+"/"+h.getMaxHP()+", MP:"+h.getCurrentMP()+"/"+h.getMaxMP()+")");
+                System.out.printf("║ %-2d │ %-16s │ %-10s │ %3d/%-3d║\n",
+                    j + 1,
+                    h.getName(),
+                    h.getFaction(),
+                    h.getCurrentHP(),
+                    h.getCurrentMP()
+                );
             }
+            System.out.println("╚════╩══════════════════╩════════════╩════════╝");
+
+            // Player choice
             int choice = -1;
             while (true) {
                 try {
-                    System.out.print("Choose hero " + (i+1) + ": ");
+                    System.out.print("Choose hero " + (i + 1) + " (1-" + available.size() + "): ");
                     choice = Integer.parseInt(sc.nextLine()) - 1;
                     if (choice < 0 || choice >= available.size()) throw new Exception();
                     break;
-                } catch (Exception e) { System.out.println("Invalid input!"); }
+                } catch (Exception e) {
+                    System.out.println("❌ Invalid input! Enter a valid hero number.");
+                }
             }
-            team.add(cloneHero(available.get(choice)));
+
+            BaseCharacter pickedHero = cloneHero(available.get(choice));
+            team.add(pickedHero);
             available.remove(choice);
+
+            // Confirm selection
+            System.out.println("\n║ Hero " + (i + 1) + " Selected: " + pickedHero.getName() +
+                               " [" + pickedHero.getFaction() + "] " +
+                               "HP:" + pickedHero.getCurrentHP() + "/" + pickedHero.getMaxHP() +
+                               " | MP:" + pickedHero.getCurrentMP() + "/" + pickedHero.getMaxMP() + " ║");
+            Utility.pause();
         }
+
+        // Final team summary
+        System.out.println("\n╔═════════════════════════════════════════════╗");
+        System.out.println("║              " + owner + " Team Finalized!       ║");
+        System.out.println("╠════╦══════════════════╦════════════╦════════╣");
+        System.out.printf("║ %-2s │ %-16s │ %-10s │ %-6s ║\n", "No", "Hero Name", "Faction", "HP/MP");
+        System.out.println("╠════╬══════════════════╬════════════╬════════╣");
+        for (int i = 0; i < team.size(); i++) {
+            BaseCharacter h = team.get(i);
+            System.out.printf("║ %-2d │ %-16s │ %-10s │ %3d/%-3d║\n",
+                i + 1,
+                h.getName(),
+                h.getFaction(),
+                h.getCurrentHP(),
+                h.getCurrentMP()
+            );
+        }
+        System.out.println("╚════╩══════════════════╩════════════╩════════╝");
     }
 
     private void selectHeroesAI(ArrayList<BaseCharacter> team, int mode) {
         ArrayList<BaseCharacter> available = getAllHeroes();
-        System.out.println("\n--- AI is choosing its heroes ---");
-        for (int i=0;i<mode;i++) {
-            try { Thread.sleep(600); } catch (InterruptedException ignored) {}
+
+        // Flat, clean header
+        System.out.println("\n╔════════ AI HERO SELECTION ════════╗\n");
+
+        for (int i = 0; i < mode; i++) {
+            // AI thinking animation
+            System.out.print("AI selecting");
+            for (int j = 0; j < 3; j++) {
+                try { Thread.sleep(300); } catch (InterruptedException ignored) {}
+                System.out.print(".");
+            }
+            System.out.println();
+
+            // Pick hero
             int ch = rand.nextInt(available.size());
             BaseCharacter pick = cloneHero(available.get(ch));
             team.add(pick);
             available.remove(ch);
-            System.out.println("🤖 AI selects: " + pick.getName()+" ["+pick.getFaction()+"]");
+
+            // Announce selection
+            System.out.println(" » " + pick.getName() + " [" + pick.getFaction() + "] « \n");
+            try { Thread.sleep(400); } catch (InterruptedException ignored) {}
         }
+
+        // Footer
+        System.out.println("╚════════ AI FINISHED ══════════════╝\n");
+
         Utility.pause();
     }
     
     BaseCharacter selectSingleHeroForArcade() {
     ArrayList<BaseCharacter> available = getAllHeroes();
+
+    // Header
+    System.out.println("\n╔═════════════════════════════════════════════╗");
+    System.out.println("║              Available Heroes               ║");
+    System.out.println("╠════╦══════════════════╦════════════╦════════╣");
+    System.out.printf("║ %-2s │ %-16s │ %-10s │ %-6s ║\n", "No", "Hero Name", "Faction", "HP/MP");
+    System.out.println("╠════╬══════════════════╬════════════╬════════╣");
+
+    // List heroes
     for (int i = 0; i < available.size(); i++) {
         BaseCharacter h = available.get(i);
-        System.out.println((i + 1) + ". " + h.getName() + " [" + h.getFaction() + "]");
+        System.out.printf("║ %-2d │ %-16s │ %-10s │ %3d/%-3d║\n",
+            i + 1,
+            h.getName(),
+            h.getFaction(),
+            h.getCurrentHP(),
+            h.getCurrentMP()
+        );
     }
+    System.out.println("╚════╩══════════════════╩════════════╩════════╝");
+
+    // Player selection
     int idx = -1;
     while (true) {
         try {
-            System.out.print("Select your hero: ");
+            System.out.print(" » ");
             idx = Integer.parseInt(sc.nextLine()) - 1;
             if (idx < 0 || idx >= available.size()) throw new Exception();
             break;
         } catch (Exception e) {
-            System.out.println("Invalid input.");
+            System.out.println(" Invalid input! Enter a valid hero number.");
         }
     }
-    return cloneHero(available.get(idx));
-}
 
+    BaseCharacter pickedHero = cloneHero(available.get(idx));
+
+    // Confirmation
+    System.out.println("\n║ Hero Selected: " + pickedHero.getName() +
+                       " [" + pickedHero.getFaction() + "] " +
+                       "HP:" + pickedHero.getCurrentHP() + "/" + pickedHero.getMaxHP() +
+                       " | MP:" + pickedHero.getCurrentMP() + "/" + pickedHero.getMaxMP() + " ║");
+    Utility.pause();
+
+    return pickedHero;
+}
 
     private BaseCharacter cloneHero(BaseCharacter hero) {
         switch (hero.getName()) {
@@ -150,10 +252,14 @@ public class BattleManager {
         int round=1;
         while (!over) {
             Utility.clearScreen();
-            System.out.println("\n========== ROUND " + round + " ==========");
+            System.out.println("╔══════════════════════════════════════╗");
+            System.out.println("║▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓║");
+            System.out.println("║▓░░░░░░░░░░░░« ROUND "+ round +" »░░░░░░░░░░░░░▓║");
+            System.out.println("║▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓║");
+            System.out.println("╚══════════════════════════════════════╝");
             // tarot phase every 3 rounds
             if (round % 3 == 0) {
-                System.out.println("\n💫 Tarot Phase!");
+                System.out.println("\n Tarot Phase!");
                 tarotPhase(team1, team2, isPvP);
             }
 
@@ -168,7 +274,7 @@ public class BattleManager {
                     continue;
                 }
                 // Player or AI controlled
-                if (isPvP || (!isPvP && team1==team1)) {
+                if (isPvP || (!isPvP && team1==team2)) {// comparing identical expressions error/ need to debug
                     // if the team1 belongs to Player in PvAI, player controls; in PvP both are player-controlled
                     playerTurn(h, team2, mode, isPvP ? "Player 1" : "Player");
                 } else {
@@ -315,9 +421,15 @@ public class BattleManager {
                 return;
             }
 
-            System.out.println("\n==================== AI TURN ====================");
-            System.out.println(enemy.getName() + " Status: HP " + enemy.getCurrentHP() + "/" + enemy.getMaxHP()
-                    + " | MP " + enemy.getCurrentMP() + "/" + enemy.getMaxMP());
+            System.out.println("\n████████████████████████████████████████");
+            System.out.println("█▓▒░          «  AI TURN  »         ░▒▓█");
+            System.out.println("████████████████████████████████████████");
+            System.out.println("╔───────────────────────────────────────");
+            System.out.println("║  " + enemy.getName()+"                             ║");
+            System.out.println("╠───────────────────────────────────────");
+            System.out.println("║  HP " + enemy.getCurrentHP() + "/" + enemy.getMaxHP() 
+                    + "   │   MP " + enemy.getCurrentMP() + "/" + enemy.getMaxMP()+"           ║");
+            System.out.println("╚───────────────────────────────────────");
 
             // Choose a target
             ArrayList<BaseCharacter> alive = new ArrayList<>();
@@ -450,21 +562,58 @@ public class BattleManager {
     // faction buff (kept from earlier)
     private void applyFactionBuffs(ArrayList<BaseCharacter> team) {
         Map<String, Integer> factionCount = new HashMap<>();
-        for (BaseCharacter hero : team) factionCount.put(hero.getFaction(), factionCount.getOrDefault(hero.getFaction(),0)+1);
+        for (BaseCharacter hero : team) {
+            factionCount.put(hero.getFaction(), factionCount.getOrDefault(hero.getFaction(), 0) + 1);
+        }
+
+        boolean anyBuff = false;
         for (String fac : factionCount.keySet()) {
             int count = factionCount.get(fac);
             if (count >= 2) {
+                anyBuff = true;
+                System.out.println("\n╔════════════════════════════════════════════════════════════════════╗");
+                System.out.println("║           Faction Buff Activated!                                  ║");
+                System.out.println("╠════════════════════════════════════════════════════════════════════╣");
+                System.out.println("║      Faction: " + fac + " (+" + count + " members)                                   ║");
+
                 for (BaseCharacter hero : team) {
                     if (hero.getFaction().equals(fac)) {
                         int hpBuff = (int)(hero.getMaxHP() * (5 + rand.nextInt(11)) / 100.0);
                         int mpBuff = (int)(hero.getMaxMP() * (5 + rand.nextInt(11)) / 100.0);
+
                         hero.setCurrentHP(hero.getCurrentHP() + hpBuff);
                         hero.setCurrentMP(hero.getCurrentMP() + mpBuff);
-                        System.out.println(hero.getName()+" receives Faction Buff! +"+hpBuff+" HP, +"+mpBuff+" MP.");
+
+                        // Display hero and buff with a visual bar
+                        System.out.println("╠────────────────────────────────────────────────────────────────────╣");
+                        System.out.printf("║ %-12s │ HP: %3d/%-3d [%s] │ MP: %3d/%-3d [%s] ║\n",
+                            hero.getName(),
+                            hero.getCurrentHP(),
+                            hero.getMaxHP(),
+                            getBar(hero.getCurrentHP(), hero.getMaxHP(), 10, '▓', '░'),
+                            hero.getCurrentMP(),
+                            hero.getMaxMP(),
+                            getBar(hero.getCurrentMP(), hero.getMaxMP(), 10, '█', '▒')
+                        );
+                        System.out.println("║  Buff: +" + hpBuff + " HP, +" + mpBuff + " MP                                               ║");
                     }
                 }
+                System.out.println("╚════════════════════════════════════════════════════════════════════╝");
             }
         }
+
+        if (!anyBuff) {
+            System.out.println("\n║ No Faction Buffs applied this turn.           ║");
+        }
+    }
+
+    // Helper method to generate a small visual bar
+    private String getBar(int current, int max, int length, char filled, char empty) {
+        int filledLength = (int) ((current / (double) max) * length);
+        StringBuilder bar = new StringBuilder();
+        for (int i = 0; i < filledLength; i++) bar.append(filled);
+        for (int i = filledLength; i < length; i++) bar.append(empty);
+        return bar.toString();
     }
     public void startArcadeMode(BaseCharacter player) {
         ArrayList<BaseCharacter> enemyTeam = new ArrayList<>();
@@ -472,7 +621,11 @@ public class BattleManager {
         int defeatedCount = 0;
         final int totalEnemies = 12;
 
-        System.out.println("\n--- Arcade Mode Start! ---");
+        System.out.println("\n╔═════════════════════════════════════════════╗");
+        System.out.println("║▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓║");
+        System.out.println("║▓░░░░░░░░░░░░« ARCADE MODE START! »░░░░░░░░░▓║");
+        System.out.println("║▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓║");
+        System.out.println("╚═════════════════════════════════════════════╝");
 
         while (player.isAlive() && defeatedCount < totalEnemies) {
             enemyTeam.clear();
@@ -480,8 +633,13 @@ public class BattleManager {
             enemyTeam.add(enemy);
             player.resetHPMP();
 
-            System.out.println("\n--- New Enemy Approaches: " + enemy.getName() + " [" + enemy.getFaction() + "] ---");
-            System.out.println(">>> Round " + roundCounter + " <<<");
+            System.out.println("\n╔─────────────────────────────────────╗");
+            System.out.println("║    «   NEW ENEMY APPROACHES!   »    ║");
+            System.out.println("╚─────────────────────────────────────╝");
+            System.out.println("   » " + enemy.getName());
+            System.out.println("   » [" + enemy.getFaction() + "]");
+
+            System.out.println("\n░▒▓█ « ROUND " + roundCounter + " » █▓▒░");
             Utility.pause();
 
             battleLoopArcade(player, enemyTeam);
@@ -489,19 +647,29 @@ public class BattleManager {
             if (player.isAlive()) {
                 defeatedCount++;
                 roundCounter++;
-                System.out.println("\nEnemy defeated! Total Wins: " + defeatedCount + "/" + totalEnemies);
+                System.out.println("\n╔─────────────────────────────╗");
+                System.out.println("║   «   ENEMY DEFEATED!   »   ║");
+                System.out.println("╚─────────────────────────────╝");
+                System.out.println("   Total Wins: " + defeatedCount + " / " + totalEnemies);
                 if (defeatedCount == totalEnemies) {
-                    System.out.println("\n🎉 Congratulations! You've cleared Arcade Mode! Grand Victory! 🎉");
+                    System.out.println("\n████████████████████████████████████████████████████████████████████████████");
+                    System.out.println("█   «   Congratulations ! You've cleared Arcade Mode! Grand Victory!    »   █");
+                    System.out.println("█████████████████████████████████████████████████████████████████████████████");
+
                     break;  // Exit loop since player cleared all enemies
                 } else {
-                    System.out.println("Here comes Round " + roundCounter + "!");
+                    System.out.println("\n░▒▓ « Here comes, round " + roundCounter + "! » ▓▒░");
                     Utility.pause();
                 }
             }
         }
 
         if (!player.isAlive()) {
-            System.out.println("\nPlayer defeated in Arcade Mode! Total Wins: " + defeatedCount + "/" + totalEnemies);
+            System.out.println("\n╔─────────────────────────────╗");
+            System.out.println("║      «  GAME OVER  »        ║");
+            System.out.println("╠─────────────────────────────╣");
+            System.out.println("║      Wins: " + defeatedCount + " / " + totalEnemies + "             ║");
+            System.out.println("╚─────────────────────────────╝");
         }
 
         Utility.pause();
