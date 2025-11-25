@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Summoner extends BaseCharacter {
     public Summoner() {
-        super("Summoner", "Mystic", 90, 150);
+        super("Summoner", "Mystic", 300, 550);
 
         skillNames[0] = "Call of the Shard";
         skillNames[1] = "Grimoire Pact";

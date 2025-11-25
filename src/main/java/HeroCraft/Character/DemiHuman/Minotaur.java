@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Minotaur extends BaseCharacter {
     public Minotaur() {
-        super("Minotaur", "DemiHuman", 140, 80);
+        super("Minotaur", "DemiHuman", 600, 285);
 
         skillNames[0] = "Taunting Roar";
         skillNames[1] = "Blood Offering";

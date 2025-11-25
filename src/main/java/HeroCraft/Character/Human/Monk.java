@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Monk extends BaseCharacter {
     public Monk() {
-        super("Monk", "Human", 110, 120);
+        super("Monk", "Human", 450, 325);
 
         skillNames[0] = "Power Punch";
         skillNames[1] = "Rising Uppercut";

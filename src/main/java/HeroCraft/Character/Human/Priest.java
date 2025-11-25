@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Priest extends BaseCharacter {
     public Priest() {
-        super("Priest", "Human", 90, 150);
+        super("Priest", "Human", 300, 560);
 
         skillNames[0] = "Holy Light";
         skillNames[1] = "Divine Retribution";

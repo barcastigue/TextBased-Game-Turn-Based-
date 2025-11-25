@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Archer extends BaseCharacter {
     public Archer() {
-        super("Archer", "DemiHuman", 100, 120);
+        super("Archer", "DemiHuman", 340, 250);
 
         skillNames[0] = "Piercing Shot";
         skillNames[1] = "Multi-Shot";

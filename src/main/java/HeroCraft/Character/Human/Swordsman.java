@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Swordsman extends BaseCharacter {
     public Swordsman() {
-        super("Swordsman", "Human", 120, 100);
+        super("Swordsman", "Human", 510, 315);
 
         skillNames[0] = "Wounded Strike";
         skillNames[1] = "Grievous Guard";
@@ -49,7 +49,6 @@ public class Swordsman extends BaseCharacter {
                 if (target.getCurrentHP() < 0) target.setCurrentHP(0);
                 System.out.println(name + " uses Curse of the Undying on " + target.getName() + " for " + trueDamage + " true damage!");
 
-                // Check if target was killed
                 if (targetHPBefore > 0 && target.getCurrentHP() == 0) {
                     int healAmount = (int)(maxHP * 0.2);
                     heal(healAmount);

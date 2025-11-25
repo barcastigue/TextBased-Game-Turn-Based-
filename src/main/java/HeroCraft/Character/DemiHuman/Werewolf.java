@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Werewolf extends BaseCharacter {
     public Werewolf() {
-        super("Werewolf", "DemiHuman", 120, 100);
+        super("Werewolf", "DemiHuman", 450, 570);
 
         skillNames[0] = "Silverbolt Shot";
         skillNames[1] = "Moonfang Awakening";

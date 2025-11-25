@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Assassin extends BaseCharacter {
     public Assassin() {
-        super("Assassin", "Human", 100, 120);
+        super("Assassin", "Human", 360, 255);
 
         skillNames[0] = "Shadow Strike";
         skillNames[1] = "Poison Dagger";

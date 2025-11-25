@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Druid extends BaseCharacter {
     public Druid() {
-        super("Druid", "Mystic", 110, 130);
+        super("Druid", "Mystic", 350, 480);
 
         skillNames[0] = "Roots of Binding";
         skillNames[1] = "Iron Bark Armor";

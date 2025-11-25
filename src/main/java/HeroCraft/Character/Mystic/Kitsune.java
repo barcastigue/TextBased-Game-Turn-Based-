@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Kitsune extends BaseCharacter {
     public Kitsune() {
-        super("Kitsune", "Mystic", 95, 140);
+        super("Kitsune", "Mystic", 360, 480);
 
         skillNames[0] = "Foxfire Eruption";
         skillNames[1] = "Spirit Mirage";

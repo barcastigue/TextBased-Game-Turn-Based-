@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Gunner extends BaseCharacter {
     public Gunner() {
-        super("Gunner", "DemiHuman", 95, 120);
+        super("Gunner", "DemiHuman", 390, 225);
 
         skillNames[0] = "Fateful Shot";
         skillNames[1] = "Hecate's Blessing";

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Elementalist extends BaseCharacter {
     public Elementalist() {
-        super("Elementalist", "Mystic", 100, 140);
+        super("Elementalist", "Mystic", 295, 600);
 
         skillNames[0] = "Magma Surge";
         skillNames[1] = "Tempest Torrent";
