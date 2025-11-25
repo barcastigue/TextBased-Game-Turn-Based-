@@ -20,6 +20,7 @@ public class Swordsman extends BaseCharacter {
         skillMaxCooldowns[2] = 6;
     }
 
+
     @Override
     public void useSkill(int skillIndex, BaseCharacter target, ArrayList<BaseCharacter> allies, ArrayList<BaseCharacter> enemies) {
         switch(skillIndex) {
@@ -42,13 +43,24 @@ public class Swordsman extends BaseCharacter {
             }
             case 2 -> { // Curse of the Undying
                 if (skillOnCooldown(2)) { System.out.println("Curse of the Undying is on cooldown."); return; }
-                int costHP = (int)(currentHP * 0.3);
-                currentHP -= costHP;
-                applyStatus("Curse", 6);
-                System.out.println(name + " sacrifices " + costHP + " HP to cast Curse of the Undying for 6 turns!");
+                int trueDamage = 70 + rand.nextInt(31); // 70-100 true damage
+                int targetHPBefore = target.getCurrentHP();
+                target.setCurrentHP(target.getCurrentHP() - trueDamage); // bypass normal takeDamage
+                if (target.getCurrentHP() < 0) target.setCurrentHP(0);
+                System.out.println(name + " uses Curse of the Undying on " + target.getName() + " for " + trueDamage + " true damage!");
+
+                // Check if target was killed
+                if (targetHPBefore > 0 && target.getCurrentHP() == 0) {
+                    int healAmount = (int)(maxHP * 0.2);
+                    heal(healAmount);
+                    System.out.println(name + " has slain " + target.getName() + " and restores " + healAmount + " HP!");
+                    applyStatus("Fury", 3); // strikes hit harder for 3 turns
+                    System.out.println(name + "'s strikes hit harder for the next 3 turns!");
+                }
+
                 skillCooldowns[2] = skillMaxCooldowns[2];
             }
-            default -> System.out.println("Invalid skill.");
+        default -> System.out.println("Invalid skill.");
         }
     }
 }

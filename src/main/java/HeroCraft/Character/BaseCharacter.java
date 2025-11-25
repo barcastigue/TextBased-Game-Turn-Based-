@@ -162,6 +162,7 @@ public abstract class BaseCharacter {
         if (oneBasedIndex <= 0 || oneBasedIndex > 3) return "Unknown Skill";
         return skillNames[oneBasedIndex - 1];
     }
+    
 
     // ---------- Abstract ----------
     public abstract void useSkill(int skillIndex, BaseCharacter target, ArrayList<BaseCharacter> allies, ArrayList<BaseCharacter> enemies);
@@ -175,4 +176,6 @@ public abstract class BaseCharacter {
     public int getMaxMP() { return maxMP; }
     public void setCurrentHP(int hp) { this.currentHP = Math.min(hp, maxHP); if (this.currentHP < 0) this.currentHP = 0; }
     public void setCurrentMP(int mp) { this.currentMP = Math.min(mp, maxMP); if (this.currentMP < 0) this.currentMP = 0; }
+
+    
 }

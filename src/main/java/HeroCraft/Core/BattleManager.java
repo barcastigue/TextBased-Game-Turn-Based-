@@ -252,7 +252,6 @@ public class BattleManager {
 
             if (sel == 4) break; // Basic attack always usable
 
-            int skillIdx = sel - 1;
             int mpCost = hero.getSkillMPCost(sel);
             int cd = hero.getSkillCooldown(sel);
 
@@ -290,49 +289,61 @@ public class BattleManager {
 
     // ---------- AI Turn ----------
     private void aiTurn(BaseCharacter enemy, ArrayList<BaseCharacter> playerTeam, int mode) {
-        if (!enemy.isAlive()) return;
-        // sleep check done by battle loop
-        // choose target
-        ArrayList<BaseCharacter> alive = new ArrayList<>();
-        for (BaseCharacter p: playerTeam) if (p.isAlive()) alive.add(p);
-        if (alive.isEmpty()) return;
+        if (!enemy.isAlive()) {
+            return;
+        }
 
+        // Display enemy status at the start of their turn
+        System.out.println("\n==================== AI TURN ====================");
+        System.out.println(enemy.getName() + " Status: HP " + enemy.getCurrentHP() + "/" + enemy.getMaxHP()
+                + " | MP " + enemy.getCurrentMP() + "/" + enemy.getMaxMP());
+
+        // Choose a target
+        ArrayList<BaseCharacter> alive = new ArrayList<>();
+        for (BaseCharacter p : playerTeam) {
+            if (p.isAlive()) {
+                alive.add(p);
+            }
+        }
+        if (alive.isEmpty()) {
+            return;
+        }
         BaseCharacter target = alive.get(rand.nextInt(alive.size()));
 
-        // Decide action: prefer usable skill (not on CD and has MP) else basic attack.
-        int chosenAction = 4; // default basic attack
-        // try to pick a skill
-        List<Integer> candidates = Arrays.asList(0,1,2);
-        Collections.shuffle(candidates);
-        for (int si : candidates) {
-            try {
-                // naive check: see if has MP by trying typical costs (subclasses actually check MP)
-                if (!enemy.skillOnCooldown(si)) {
-                    chosenAction = si+1;
-                    break;
-                }
-            } catch (Exception ignored) {}
+        // ---------- AI Skill Decision ----------
+        List<Integer> usableSkills = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            if (!enemy.skillOnCooldown(i) && enemy.hasMP(enemy.getSkillMPCost(i + 1))) {
+                usableSkills.add(i);
+            }
         }
 
+        // Choose action
+        int chosenAction;
+        if (!usableSkills.isEmpty()) {
+            // pick random usable skill
+            Collections.shuffle(usableSkills);
+            chosenAction = usableSkills.get(0) + 1; // 1-based index
+        } else {
+            chosenAction = 4; // fallback to basic attack
+        }
+
+        // ---------- Perform Action ----------
         if (chosenAction == 4) {
-            // confusion possibility: 51% hit ally
+            // confusion possibility: 51% chance to hit ally (if enemy has Confusion)
             if (enemy.hasStatus("Confusion") && rand.nextInt(100) < 51) {
-                // attack random ally of own team (simulate misfire)
-                ArrayList<BaseCharacter> ownAlive = new ArrayList<>();
-                // assume enemy belongs to team2 or team1; AI just attacks playerTeam normally; confusion for AI means attack its own allies - we skip complexity and just randomize target to playerTeam above
-                System.out.println(enemy.getName()+" is confused and attacks an ally (simulated)!");
+                System.out.println(enemy.getName() + " is confused and attacks an ally (simulated)!");
                 enemy.basicAttack(target);
             } else {
-                System.out.println("\n==================== AI TURN ====================");
-                System.out.println(enemy.getName()+" attacks >>> "+target.getName()+" <<< !");
+                System.out.println(enemy.getName() + " attacks >>> " + target.getName() + " <<< !");
                 enemy.basicAttack(target);
-                System.out.println("================================================");
             }
         } else {
-            System.out.println("\n==================== AI TURN ====================");
-            enemy.useSkill(chosenAction-1, target, null, playerTeam);
-            System.out.println("================================================");
+            // Use selected skill
+            enemy.useSkill(chosenAction - 1, target, null, playerTeam);
         }
+
+        System.out.println("================================================");
     }
 
     // ---------- Tarot system ----------
@@ -431,28 +442,44 @@ public class BattleManager {
     }
     public void startArcadeMode(BaseCharacter player) {
         ArrayList<BaseCharacter> enemyTeam = new ArrayList<>();
-        int winCount = 0;
+        int roundCounter = 1;
+        int defeatedCount = 0;
+        final int totalEnemies = 12;
+
         System.out.println("\n--- Arcade Mode Start! ---");
 
-    while (player.isAlive()) {
-        enemyTeam.clear();
-        BaseCharacter enemy = cloneHero(getAllHeroes().get(rand.nextInt(getAllHeroes().size())));
-        enemyTeam.add(enemy);
-        player.resetHPMP();
+        while (player.isAlive() && defeatedCount < totalEnemies) {
+            enemyTeam.clear();
+            BaseCharacter enemy = cloneHero(getAllHeroes().get(rand.nextInt(getAllHeroes().size())));
+            enemyTeam.add(enemy);
+            player.resetHPMP();
 
-        System.out.println("\n--- New Enemy Approaches: " + enemy.getName() + " [" + enemy.getFaction() + "] ---");
-        battleLoopArcade(player, enemyTeam);
-
-        if (player.isAlive()) {
-            winCount++;
-            System.out.println("Enemy defeated! Total Wins: " + winCount);
+            System.out.println("\n--- New Enemy Approaches: " + enemy.getName() + " [" + enemy.getFaction() + "] ---");
+            System.out.println(">>> Round " + roundCounter + " <<<");
             Utility.pause();
-        }
-    }
 
-    System.out.println("\nPlayer defeated in Arcade Mode! Total Wins: " + winCount);
-    Utility.pause();
-}
+            battleLoopArcade(player, enemyTeam);
+
+            if (player.isAlive()) {
+                defeatedCount++;
+                roundCounter++;
+                System.out.println("\nEnemy defeated! Total Wins: " + defeatedCount + "/" + totalEnemies);
+                if (defeatedCount == totalEnemies) {
+                    System.out.println("\n🎉 Congratulations! You've cleared Arcade Mode! Grand Victory! 🎉");
+                    break;  // Exit loop since player cleared all enemies
+                } else {
+                    System.out.println("Here comes Round " + roundCounter + "!");
+                    Utility.pause();
+                }
+            }
+        }
+
+        if (!player.isAlive()) {
+            System.out.println("\nPlayer defeated in Arcade Mode! Total Wins: " + defeatedCount + "/" + totalEnemies);
+        }
+
+        Utility.pause();
+    }
 
 
         private void battleLoopArcade(BaseCharacter player, ArrayList<BaseCharacter> enemyTeam) {
@@ -476,5 +503,4 @@ public class BattleManager {
             if (!player.isAlive()) { over = true; break; }
         }
     }
-
 }
