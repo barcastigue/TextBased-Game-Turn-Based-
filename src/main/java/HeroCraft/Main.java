@@ -4,10 +4,6 @@
  */
 package HeroCraft;
 
-/**
- *
- * @author DELL
- */
 import HeroCraft.Core.MainMenu;
 
 public class Main {
