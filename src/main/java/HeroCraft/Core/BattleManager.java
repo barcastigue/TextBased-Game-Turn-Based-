@@ -248,242 +248,289 @@ public class BattleManager {
 
     // ---------- Battle loop ----------
     private void battleLoop(ArrayList<BaseCharacter> team1, ArrayList<BaseCharacter> team2, int mode, boolean isPvP) {
-        boolean over=false;
-        int round=1;
-        while (!over) {
-            Utility.clearScreen();
-            System.out.println("╔══════════════════════════════════════╗");
-            System.out.println("║▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓║");
-            System.out.println("║▓░░░░░░░░░░░░« ROUND "+ round +" »░░░░░░░░░░░░░▓║");
-            System.out.println("║▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓║");
-            System.out.println("╚══════════════════════════════════════╝");
-            // tarot phase every 3 rounds
-            if (round % 3 == 0) {
-                System.out.println("\n Tarot Phase!");
-                tarotPhase(team1, team2, isPvP);
-            }
+    boolean battleOver = false;
+    int round = 1;
 
-            // Team1 turn sequence
-            for (BaseCharacter h : team1) {
-                if (!h.isAlive()) continue;
-                // At start of hero turn check statuses that skip turns
-                if (h.hasStatus("Sleep")) {
-                    System.out.println(h.getName()+" is asleep and skips the turn.");
-                    h.reduceStatusDuration();
-                    h.reduceCooldowns();
-                    continue;
-                }
-                // Player or AI controlled
-                if (isPvP || (!isPvP && team1==team2)) {// comparing identical expressions error/ need to debug
-                    // if the team1 belongs to Player in PvAI, player controls; in PvP both are player-controlled
-                    playerTurn(h, team2, mode, isPvP ? "Player 1" : "Player");
-                } else {
-                    aiTurn(h, team2, mode);
-                }
-                // post-turn handle
-                h.reduceStatusDuration();
-                h.reduceCooldowns();
-                if (isTeamDefeated(team2)) { System.out.println(isPvP ? "Player 1 Wins!" : "Player Wins!"); over=true; break;}
-            }
-            if (over) break;
+    while (!battleOver) {
+        Utility.clearScreen();
 
-            // Team2 turn
-            for (BaseCharacter h : team2) {
-                if (!h.isAlive()) continue;
-                if (h.hasStatus("Sleep")) {
-                    System.out.println(h.getName()+" is asleep and skips the turn.");
-                    h.reduceStatusDuration();
-                    h.reduceCooldowns();
-                    continue;
-                }
-                if (isPvP) playerTurn(h, team1, mode, "Player 2");
-                else aiTurn(h, team1, mode);
-                h.reduceStatusDuration();
-                h.reduceCooldowns();
-                if (isTeamDefeated(team1)) { System.out.println(isPvP ? "Player 2 Wins!" : "AI Wins!"); over=true; break;}
-            }
+        // --- Round Header ---
+        System.out.println("╔══════════════════════════════════════╗");
+        System.out.println("║          « ROUND " + round + " »          ║");
+        System.out.println("╚══════════════════════════════════════╝\n");
 
-            round++;
-            Utility.pause();
+        // --- Tarot Phase every 3 rounds ---
+        if (round % 3 == 0) {
+            System.out.println("🎴 Tarot Phase!");
+            tarotPhase(team1, team2, isPvP);
         }
-        System.out.println("\nBattle Over!");
-        Utility.pause();
-    }
 
-    // ---------- Player Turn (with skill menu) ----------
-    private void playerTurn(BaseCharacter hero, ArrayList<BaseCharacter> enemies, int mode, String playerName) {
-        if (!hero.isAlive()) return;
+        // --- Team1 Turn ---
+        for (BaseCharacter hero : team1) {
+            if (!hero.isAlive()) continue;
 
-        // Check if hero is asleep (skip turn)
-        if (hero.hasStatus("Sleep")) {
-            System.out.println(hero.getName() + " is asleep and cannot act this turn.");
+            if (hero.hasStatus("Sleep")) {
+                System.out.println(hero.getName() + " is asleep and skips the turn.");
+                hero.reduceStatusDuration();
+                hero.reduceCooldowns();
+                continue;
+            }
+
+            // Player-controlled or AI-controlled
+            if (isPvP || (!isPvP && team1 != team2)) { 
+                // PvP or Player team in PvAI
+                playerTurn(hero, team2, mode, isPvP ? "Player 1" : "Player");
+            } else {
+                // AI-controlled (if team1 was AI)
+                aiTurn(hero, team2, mode);
+            }
+
+            // Post-turn effects
             hero.reduceStatusDuration();
             hero.reduceCooldowns();
-            return;
-        }
 
-        System.out.println("\n" + playerName + "'s " + hero.getName() +
-                " turn (HP: " + hero.getCurrentHP() + "/" + hero.getMaxHP() +
-                " | MP: " + hero.getCurrentMP() + "/" + hero.getMaxMP() + ")");
-
-        // choose target if 3v3, otherwise 1v1 auto-target
-        BaseCharacter target = null;
-        if (mode == 1) {
-            for (BaseCharacter e : enemies) {
-                if (e.isAlive()) { target = e; break; }
-            }
-            if (target == null) return;
-        } else {
-            displayTeam(enemies, "Enemies");
-            int idx = -1;
-            while (true) {
-                try {
-                    System.out.print("Select target number: ");
-                    idx = Integer.parseInt(sc.nextLine()) - 1;
-                    if (idx < 0 || idx >= enemies.size() || !enemies.get(idx).isAlive()) throw new Exception();
-                    break;
-                } catch (Exception e) { System.out.println("Invalid selection."); }
-            }
-            target = enemies.get(idx);
-        }
-
-        // ---------- Skill selection ----------
-        int sel = -1;
-        while (true) {
-            System.out.println("\nChoose action:");
-            for (int i = 1; i <= 3; i++) {
-                String skillName = hero.getSkillName(i);
-                int mpCost = hero.getSkillMPCost(i);
-                int cd = hero.getSkillCooldown(i);
-                if (hero.hasStatus("Silence")) {
-                    System.out.println(i + ". " + skillName + " (Silenced!)");
-                } else {
-                    System.out.println(i + ". " + skillName + " (MP: " + mpCost + ", CD: " + cd + ")");
-                }
-            }
-            System.out.println("4. Basic Attack");
-
-            try {
-                System.out.print("Enter 1-4: ");
-                sel = Integer.parseInt(sc.nextLine());
-                if (sel < 1 || sel > 4) throw new Exception();
-
-                // If silenced, skills cannot be used
-                if (hero.hasStatus("Silence") && sel >= 1 && sel <= 3) {
-                    System.out.println(hero.getName() + " is silenced and cannot use skills! Choose Basic Attack.");
-                    continue;
-                }
-
-                if (sel == 4) break; // Basic attack always usable
-
-                int mpCost = hero.getSkillMPCost(sel);
-                int cd = hero.getSkillCooldown(sel);
-
-                if (cd > 0) {
-                    System.out.println("Skill is on cooldown. Choose another action.");
-                    continue;
-                }
-                if (!hero.hasMP(mpCost)) {
-                    System.out.println("Not enough MP to cast this skill. Choose another action.");
-                    continue;
-                }
-                break; // valid skill
-            } catch (Exception e) {
-                System.out.println("Invalid input. Try again.");
+            if (isTeamDefeated(team2)) {
+                System.out.println(isPvP ? "Player 1 Wins!" : "Player Wins!");
+                battleOver = true;
+                break;
             }
         }
+        if (battleOver) break;
 
-        // ---------- Execute action ----------
-        if (sel == 4) {
-            // Basic attack
-            if (hero.hasStatus("Confusion") && rand.nextInt(100) < 51) {
-                ArrayList<BaseCharacter> alive = new ArrayList<>();
-                for (BaseCharacter e : enemies) if (e.isAlive()) alive.add(e);
-                BaseCharacter alt = alive.get(rand.nextInt(alive.size()));
-                System.out.println(hero.getName() + " is confused and hits " + alt.getName() + " instead!");
-                hero.basicAttack(alt);
+        // --- Team2 Turn ---
+        for (BaseCharacter hero : team2) {
+            if (!hero.isAlive()) continue;
+
+            if (hero.hasStatus("Sleep")) {
+                System.out.println(hero.getName() + " is asleep and skips the turn.");
+                hero.reduceStatusDuration();
+                hero.reduceCooldowns();
+                continue;
+            }
+
+            if (isPvP) {
+                // Player 2 in PvP
+                playerTurn(hero, team1, mode, "Player 2");
             } else {
-                hero.basicAttack(target);
+                // AI-controlled in PvAI
+                aiTurn(hero, team1, mode);
             }
-        } else {
-            hero.useSkill(sel - 1, target, null, enemies);
+
+            hero.reduceStatusDuration();
+            hero.reduceCooldowns();
+
+            if (isTeamDefeated(team1)) {
+                System.out.println(isPvP ? "Player 2 Wins!" : "AI Wins!");
+                battleOver = true;
+                break;
+            }
+        }
+        round++;
+        Utility.pause();
+    }
+    System.out.println("\nBattle Over!");
+    Utility.pause();
+}
+
+    private void playerTurn(BaseCharacter hero, ArrayList<BaseCharacter> enemies, int mode, String playerName) {
+    if (!hero.isAlive()) return;
+
+    // Check if hero is asleep (skip turn)
+    if (hero.hasStatus("Sleep")) {
+        System.out.println(hero.getName() + " is asleep and cannot act this turn.");
+        hero.reduceStatusDuration();
+        hero.reduceCooldowns();
+        return;
+    }
+
+    // ---------- Target Selection ----------
+    BaseCharacter target = null;
+
+    if (mode == 1) {
+        // 1v1: auto-select first alive enemy
+        for (BaseCharacter e : enemies) {
+            if (e.isAlive()) { target = e; break; }
+        }
+        if (target == null) return;
+    } else {
+        // 3v3: display enemies and select target
+        System.out.println("\n--- Enemies ---");
+        for (int i = 0; i < enemies.size(); i++) {
+            BaseCharacter e = enemies.get(i);
+            System.out.printf("%d. %s (HP:%d/%d | MP:%d/%d)\n", i + 1, e.getName(),
+                    e.getCurrentHP(), e.getMaxHP(), e.getCurrentMP(), e.getMaxMP());
+        }
+        int idx = -1;
+        while (true) {
+            try {
+                System.out.print("Select target number: ");
+                idx = Integer.parseInt(sc.nextLine()) - 1;
+                if (idx < 0 || idx >= enemies.size() || !enemies.get(idx).isAlive()) throw new Exception();
+                break;
+            } catch (Exception e) {
+                System.out.println("Invalid selection.");
+            }
+        }
+        target = enemies.get(idx);
+    }
+
+    // ---------- Display Battle UI ----------
+    displayBattleStatus(hero, target);
+
+    // ---------- Skill Selection ----------
+    int sel = -1;
+    while (true) {
+        System.out.println("\nChoose action:");
+        for (int i = 1; i <= 3; i++) {
+            String skillName = hero.getSkillName(i);
+            int mpCost = hero.getSkillMPCost(i);
+            int cd = hero.getSkillCooldown(i);
+            if (hero.hasStatus("Silence")) {
+                System.out.println(i + ". " + skillName + " (Silenced!)");
+            } else {
+                System.out.println(i + ". " + skillName + " (MP: " + mpCost + ", CD: " + cd + ")");
+            }
+        }
+        System.out.println("4. Basic Attack");
+
+        try {
+            System.out.print("Enter 1-4: ");
+            sel = Integer.parseInt(sc.nextLine());
+            if (sel < 1 || sel > 4) throw new Exception();
+
+            if (hero.hasStatus("Silence") && sel >= 1 && sel <= 3) {
+                System.out.println(hero.getName() + " is silenced and cannot use skills! Choose Basic Attack.");
+                continue;
+            }
+
+            if (sel == 4) break; // Basic attack always usable
+
+            int mpCost = hero.getSkillMPCost(sel);
+            int cd = hero.getSkillCooldown(sel);
+
+            if (cd > 0) {
+                System.out.println("Skill is on cooldown. Choose another action.");
+                continue;
+            }
+            if (!hero.hasMP(mpCost)) {
+                System.out.println("Not enough MP to cast this skill. Choose another action.");
+                continue;
+            }
+            break; // valid skill
+        } catch (Exception e) {
+            System.out.println("Invalid input. Try again.");
         }
     }
+
+    // ---------- Execute Action ----------
+    if (sel == 4) {
+        // Basic attack
+        if (hero.hasStatus("Confusion") && rand.nextInt(100) < 51) {
+            ArrayList<BaseCharacter> alive = new ArrayList<>();
+            for (BaseCharacter e : enemies) if (e.isAlive()) alive.add(e);
+            BaseCharacter alt = alive.get(rand.nextInt(alive.size()));
+            System.out.println(hero.getName() + " is confused and hits " + alt.getName() + " instead!");
+            hero.basicAttack(alt);
+        } else {
+            hero.basicAttack(target);
+        }
+    } else {
+        hero.useSkill(sel - 1, target, null, enemies);
+    }
+}
+
+// ---------- Battle UI Method ----------
+private void displayBattleStatus(BaseCharacter player, BaseCharacter enemy) {
+    System.out.println();
+    System.out.printf("Player  : %-16s HP: %3d/%-3d   MP: %3d/%-3d\n",
+            player.getName(), player.getCurrentHP(), player.getMaxHP(),
+            player.getCurrentMP(), player.getMaxMP());
+    System.out.printf("Enemy   : %-16s HP: %3d/%-3d   MP: %3d/%-3d\n",
+            enemy.getName(), enemy.getCurrentHP(), enemy.getMaxHP(),
+            enemy.getCurrentMP(), enemy.getMaxMP());
+    System.out.println("────────────────────────────────────────────────────────────");
+
+    System.out.println("Status Effects:");
+    System.out.printf("Player  : %s\n", player.getStatuses().isEmpty() ? "[None]" : String.join(", ", player.getStatuses()));
+    System.out.printf("Enemy   : %s\n", enemy.getStatuses().isEmpty() ? "[None]" : String.join(", ", enemy.getStatuses()));
+    System.out.println("────────────────────────────────────────────────────────────");
+}
+
         // ---------- AI Turn ----------
         private void aiTurn(BaseCharacter enemy, ArrayList<BaseCharacter> playerTeam, int mode) {
-            if (!enemy.isAlive()) return;
+    if (!enemy.isAlive()) return;
 
-            // Check for Sleep
-            if (enemy.hasStatus("Sleep")) {
-                System.out.println("\n" + enemy.getName() + " is asleep and cannot act this turn.");
-                enemy.reduceStatusDuration();
-                enemy.reduceCooldowns();
-                return;
-            }
-
-            System.out.println("\n████████████████████████████████████████");
-            System.out.println("█▓▒░          «  AI TURN  »         ░▒▓█");
-            System.out.println("████████████████████████████████████████");
-            System.out.println("╔───────────────────────────────────────");
-            System.out.println("║  " + enemy.getName()+"                             ║");
-            System.out.println("╠───────────────────────────────────────");
-            System.out.println("║  HP " + enemy.getCurrentHP() + "/" + enemy.getMaxHP() 
-                    + "   │   MP " + enemy.getCurrentMP() + "/" + enemy.getMaxMP()+"           ║");
-            System.out.println("╚───────────────────────────────────────");
-
-            // Choose a target
-            ArrayList<BaseCharacter> alive = new ArrayList<>();
-            for (BaseCharacter p : playerTeam) if (p.isAlive()) alive.add(p);
-            if (alive.isEmpty()) return;
-            BaseCharacter target = alive.get(rand.nextInt(alive.size()));
-
-            // ---------- AI Action ----------
-            if (enemy.hasStatus("Silence")) {
-                // Only basic attack
-                System.out.println(enemy.getName() + " is silenced and can only use Basic Attack!");
-                if (enemy.hasStatus("Confusion") && rand.nextInt(100) < 51) {
-                    BaseCharacter alt = alive.get(rand.nextInt(alive.size()));
-                    System.out.println(enemy.getName() + " is confused and attacks " + alt.getName() + " instead!");
-                    enemy.basicAttack(alt);
-                } else {
-                    enemy.basicAttack(target);
-                }
-            } else {
-                // Normal AI skill decision
-                List<Integer> usableSkills = new ArrayList<>();
-                for (int i = 0; i < 3; i++) {
-                    if (!enemy.skillOnCooldown(i) && enemy.hasMP(enemy.getSkillMPCost(i + 1))) {
-                        usableSkills.add(i);
-                    }
-                }
-
-                int chosenAction;
-                if (!usableSkills.isEmpty()) {
-                    Collections.shuffle(usableSkills);
-                    chosenAction = usableSkills.get(0) + 1; // 1-based index
-                } else {
-                    chosenAction = 4; // fallback to basic attack
-                }
-
-                // ---------- Perform Action ----------
-                if (chosenAction == 4) {
-                    if (enemy.hasStatus("Confusion") && rand.nextInt(100) < 51) {
-                        BaseCharacter alt = alive.get(rand.nextInt(alive.size()));
-                        System.out.println(enemy.getName() + " is confused and attacks " + alt.getName() + " instead!");
-                        enemy.basicAttack(alt);
-                    } else {
-                        System.out.println(enemy.getName() + " attacks >>> " + target.getName() + " <<< !");
-                        enemy.basicAttack(target);
-                    }
-                } else {
-                    enemy.useSkill(chosenAction - 1, target, null, playerTeam);
-                }
-            }
-
-        System.out.println("================================================");
+    // --- Check Sleep Status ---
+    if (enemy.hasStatus("Sleep")) {
+        System.out.println("\n" + enemy.getName() + " is asleep and cannot act this turn.");
         enemy.reduceStatusDuration();
         enemy.reduceCooldowns();
+        return;
     }
+
+    // --- Get Alive Targets ---
+    ArrayList<BaseCharacter> aliveTargets = new ArrayList<>();
+    for (BaseCharacter p : playerTeam) {
+        if (p.isAlive()) aliveTargets.add(p);
+    }
+    if (aliveTargets.isEmpty()) return;
+
+    // Pick a random target
+    BaseCharacter target = aliveTargets.get(rand.nextInt(aliveTargets.size()));
+
+    // --- Display AI Battle Status ---
+    displayBattleStatus(enemy, target);
+
+    // --- Determine Action ---
+    int chosenAction = 4; // default: basic attack
+
+    if (!enemy.hasStatus("Silence")) {
+        // Check which skills are usable (not on cooldown & enough MP)
+        List<Integer> usableSkills = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            if (!enemy.skillOnCooldown(i) && enemy.hasMP(enemy.getSkillMPCost(i + 1))) {
+                usableSkills.add(i);
+            }
+        }
+        if (!usableSkills.isEmpty()) {
+            // Randomly pick a skill
+            Collections.shuffle(usableSkills);
+            chosenAction = usableSkills.get(0) + 1; // 1-based index
+        }
+    } else {
+        System.out.println(enemy.getName() + " is silenced and can only use Basic Attack!");
+    }
+
+    // --- Execute Action ---
+    if (chosenAction == 4) {
+        // Basic attack
+        BaseCharacter actualTarget = target;
+        if (enemy.hasStatus("Confusion") && rand.nextInt(100) < 51) {
+            actualTarget = aliveTargets.get(rand.nextInt(aliveTargets.size()));
+            System.out.println(enemy.getName() + " is confused and attacks " + actualTarget.getName() + " instead!");
+        } else {
+            System.out.println(enemy.getName() + " attacks >>> " + target.getName() + " <<< !");
+        }
+        enemy.basicAttack(actualTarget);
+    } else {
+        // Skill attack
+        BaseCharacter actualTarget = target;
+        if (enemy.hasStatus("Confusion") && rand.nextInt(100) < 51) {
+            actualTarget = aliveTargets.get(rand.nextInt(aliveTargets.size()));
+            System.out.println(enemy.getName() + " is confused and uses skill on " + actualTarget.getName() + " instead!");
+        } else {
+            System.out.println(enemy.getName() + " uses " + enemy.getSkillName(chosenAction) + " on " + target.getName() + "!");
+        }
+        enemy.useSkill(chosenAction - 1, actualTarget, null, playerTeam);
+    }
+
+    // --- Reduce Status Duration & Cooldowns ---
+    enemy.reduceStatusDuration();
+    enemy.reduceCooldowns();
+
+    System.out.println("================================================");
+}
+
     // ---------- Tarot system ----------
     private void tarotPhase(ArrayList<BaseCharacter> team1, ArrayList<BaseCharacter> team2, boolean isPvP) {
         applyTarotChoice(team1, team2, "Player 1");
@@ -531,7 +578,7 @@ public class BattleManager {
     private void applyTarotChoiceAI(ArrayList<BaseCharacter> aiTeam, ArrayList<BaseCharacter> playerTeam) {
         List<TarotCard> cards = getRandomTarotCards(3);
         TarotCard chosen = cards.get(rand.nextInt(cards.size()));
-        System.out.println("\n🤖 AI selects tarot: "+chosen.name);
+        System.out.println("\n AI selects tarot: "+chosen.name);
         ArrayList<BaseCharacter> alive = new ArrayList<>();
         for (BaseCharacter p : playerTeam) if (p.isAlive()) alive.add(p);
         if (alive.isEmpty()) return;
@@ -543,15 +590,6 @@ public class BattleManager {
         ArrayList<TarotCard> copy = new ArrayList<>(tarotDeck);
         Collections.shuffle(copy);
         return copy.subList(0, Math.min(count, copy.size()));
-    }
-
-    // ---------- Utilities ----------
-    private void displayTeam(ArrayList<BaseCharacter> team, String title) {
-        System.out.println("\n--- " + title + " ---");
-        for (int i=0;i<team.size();i++) {
-            BaseCharacter h = team.get(i);
-            System.out.println((i+1)+". "+h.getName()+" (HP:"+h.getCurrentHP()+"/"+h.getMaxHP()+" | MP:"+h.getCurrentMP()+"/"+h.getMaxMP()+")");
-        }
     }
 
     private boolean isTeamDefeated(ArrayList<BaseCharacter> team) {

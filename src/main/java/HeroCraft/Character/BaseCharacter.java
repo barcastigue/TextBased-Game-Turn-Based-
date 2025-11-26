@@ -11,7 +11,9 @@ public abstract class BaseCharacter {
     protected int currentHP;
     protected int maxMP;
     protected int currentMP;
-
+    
+    private ArrayList<String> statusNames = new ArrayList<>();
+    private ArrayList<Integer> statusTurns = new ArrayList<>();
     protected Random rand = new Random();
 
     public void resetHPMP() {
@@ -84,22 +86,20 @@ public abstract class BaseCharacter {
         if (currentHP > maxHP) currentHP = maxHP;
     }
 
-    public boolean isAlive() {
-        return currentHP > 0;
-    }
-
     // ---------- Status ----------
-    public void applyStatus(String name, int turns) {
-        if (name == null || turns <= 0) return;
-        statuses.add(new StatusEffect(name, turns));
-        System.out.println(this.name + " is afflicted with " + name + " for " + turns + " turn(s).");
+    public void applyStatus(String status, int duration) {
+        for (int i = 0; i < statusNames.size(); i++) {
+            if (statusNames.get(i).equals(status)) {
+                statusTurns.set(i, duration);
+                return;
+            }
+        }
+        statusNames.add(status);
+        statusTurns.add(duration);
     }
 
-    public boolean hasStatus(String name) {
-        for (StatusEffect s : statuses) {
-            if (s.name.equals(name) && s.remainingTurns > 0) return true;
-        }
-        return false;
+    public boolean hasStatus(String status) {
+        return statusNames.contains(status);
     }
 
     public void removeStatus(String name) {
@@ -107,14 +107,28 @@ public abstract class BaseCharacter {
     }
 
     public void reduceStatusDuration() {
-        for (int i = statuses.size() - 1; i >= 0; i--) {
-            StatusEffect s = statuses.get(i);
-            s.remainingTurns--;
-            if (s.remainingTurns <= 0) {
-                System.out.println(this.name + " is no longer affected by " + s.name + ".");
-                statuses.remove(i);
+        for (int i = statusTurns.size() - 1; i >= 0; i--) {
+            int turns = statusTurns.get(i) - 1;
+            if (turns <= 0) {
+                statusNames.remove(i);
+                statusTurns.remove(i);
+            } else {
+                statusTurns.set(i, turns);
             }
         }
+    }
+    public String getStatuses() {
+        if (statusNames.isEmpty()) return "None";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < statusNames.size(); i++) {
+            sb.append(statusNames.get(i))
+              .append(" (")
+              .append(statusTurns.get(i))
+              .append(" Turn");
+            if (statusTurns.get(i) > 1) sb.append("s");
+            sb.append(") ");
+        }
+        return sb.toString().trim();
     }
 
     // ---------- Cooldown & MP ----------
@@ -176,6 +190,6 @@ public abstract class BaseCharacter {
     public int getMaxMP() { return maxMP; }
     public void setCurrentHP(int hp) { this.currentHP = Math.min(hp, maxHP); if (this.currentHP < 0) this.currentHP = 0; }
     public void setCurrentMP(int mp) { this.currentMP = Math.min(mp, maxMP); if (this.currentMP < 0) this.currentMP = 0; }
-
+    public boolean isAlive() { return currentHP > 0; }
     
 }
